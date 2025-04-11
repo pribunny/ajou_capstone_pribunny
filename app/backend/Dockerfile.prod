@@ -1,0 +1,8 @@
+# app/backend/Dockerfile.dev.prod
+
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev  # devDependencies 제외
+COPY . .
+CMD ["node", "server.js"]

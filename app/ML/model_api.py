@@ -13,7 +13,7 @@ from prompts.prompt_templates import summary_template, unfair_detect_template
 from loaders.html_parser import clean_html
 
 # 환경변수 로드
-load_dotenv(".env")
+load_dotenv(".env.prod.dev")
 api_key = os.getenv("OPENAI_API_KEY")
 
 # FastAPI 앱 초기화

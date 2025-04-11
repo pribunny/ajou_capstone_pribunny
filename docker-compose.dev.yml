@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  backend-node:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.prod # 개발용 Dockerfile 적용
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app/backend:/app
+    env_file:
+      - ./app/backend/.env.dev
+    command: npx nodemon -L server.js
+    restart: unless-stopped
+
+#  backend-fastapi:
+#    build: ./app/backend-fastapi
+#    ports:
+#      - "8000:8000"
+#    volumes:
+#      - ./app/backend-fastapi:/app
+#    env_file:
+#      - ./app/backend-fastapi/.env.prod.dev
+#    command: uvicorn model_server:app --host 0.0.0.0 --port 8000 --reload
+#    restart: unless-stopped

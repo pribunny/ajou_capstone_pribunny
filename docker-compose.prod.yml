@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  backend-node:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.prod # 배포용 Dockerfile 적용
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./app/backend/.env.prod
+    restart: always
+
+#  backend-fastapi:
+#    build: ./app/backend-fastapi
+#    ports:
+#      - "8000:8000"
+#    env_file:
+#      - ./app/backend-fastapi/.env.prod.prod
+#    command: uvicorn model_server:app --host 0.0.0.0 --port 8000
+#    restart: always
