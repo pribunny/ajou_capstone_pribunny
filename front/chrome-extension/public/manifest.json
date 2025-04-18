@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "my-extension",
+  "version": "1.0.0",
+  "description": "",
+  "icons": {
+    "16": "extension_logo.png",
+    "32": "extension_logo.png",
+    "48": "extension_logo.png",
+    "128": "extension_logo.png"
+  },
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*/*"
+  ]
+}
