@@ -9,13 +9,23 @@
     "48": "extension_logo.png",
     "128": "extension_logo.png"
   },
+
   "action": {
     "default_popup": "index.html"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["getSource.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
   "permissions": [
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
-    "https://*/*"
+    "https://*/"
   ]
 }
