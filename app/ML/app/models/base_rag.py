@@ -9,8 +9,6 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-# 환경변수에서 OpenAI API 키 로드
-load_dotenv('./.env.dev')
 api_key = os.getenv("OPENAI_API_KEY")
 
 # 🔹 기본 LLM 생성 함수
@@ -32,7 +30,7 @@ class BaseRAGChain:
     ):
         self.retriever = retriever
         self.prompt = prompt
-        self.llm = llm
+        self.llm = get_default_llm()
         self.chain_type = chain_type
         self._build_chain()
         self.return_source_documents_type = return_source_documents_type
@@ -50,8 +48,8 @@ class BaseRAGChain:
 
     def run(self, query_or_document: Union[str, dict]) -> str:
         if isinstance(query_or_document, str):
-            return self.chain.run(query_or_document)
+            return self.chain.invoke({"query": query_or_document})
         elif isinstance(query_or_document, dict) and "query" in query_or_document:
-            return self.chain.run(query_or_document["query"])
+            return self.chain.invoke({"query": query_or_document["query"]})
         else:
             raise ValueError("지원하지 않는 입력 형식입니다.")
