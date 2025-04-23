@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend-node:
     build:
@@ -14,13 +12,15 @@ services:
     command: npx nodemon -L server.js
     restart: unless-stopped
 
-#  backend-fastapi:
-#    build: ./app/backend-fastapi
-#    ports:
-#      - "8000:8000"
-#    volumes:
-#      - ./app/backend-fastapi:/app
-#    env_file:
-#      - ./app/backend-fastapi/.env.prod.dev
-#    command: uvicorn model_server:app --host 0.0.0.0 --port 8000 --reload
-#    restart: unless-stopped
+  backend-ml:
+    build:
+      context: ./app/ML
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app/ML:/app
+    env_file:
+      - ./app/ML/.env.dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
