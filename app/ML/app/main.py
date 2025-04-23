@@ -8,7 +8,7 @@ app = FastAPI()
 
 app.include_router(summary)
 
-env_path = Path(__file__).resolve().parent / ".env.dev"
+env_path = Path(__file__).resolve().parent / "../.env.dev"
 load_dotenv(dotenv_path=env_path)
 
 @app.get("/")
