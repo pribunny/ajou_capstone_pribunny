@@ -27,7 +27,7 @@ app.use("/api", indexRoutes);
 
 // 요약 라우터
 const summarizeRoutes = require("./routes/summarize")
-app.use("/summarize", summarizeRoutes);
+app.use("/api/summary", summarizeRoutes);
 
 // 서버 실행
 https.createServer(sslOptions, app).listen(PORT, () => {
