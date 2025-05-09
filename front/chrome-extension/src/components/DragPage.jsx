@@ -1,22 +1,10 @@
 import { useEffect, useState } from 'react';
+import Logo from '../assets/extension_logo.png';
 
-function DragPage({ text }) {
+function DragPage({ text, mouseX, mouseY, lastRect, widthRect }) {
   const [selectedText] = useState(text);
   const [showPopup, setShowPopup] = useState(false);
-  const [position, setPosition] = useState({ x: 100, y: 100 }); // 초기 위치
-
-  useEffect(() => {
-    // 마우스 마지막 위치 기준으로 버튼 위치 지정
-    const mouseUpHandler = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-
-    document.addEventListener('mouseup', mouseUpHandler);
-
-    return () => {
-      document.removeEventListener('mouseup', mouseUpHandler);
-    };
-  }, []);
+  const [position, setPosition] = useState({x:mouseX, y:mouseY});
 
   const handleAnalyzeClick = () => {
     setShowPopup(true);
@@ -31,11 +19,11 @@ function DragPage({ text }) {
       {!showPopup && (
         <div
           style={{
-            position: 'fixed',
-            top: `${position.y}px`,
-            left: `${position.x}px`,
-            background: '#111',
-            color: '#fff',
+            position: 'absolute',
+            top: position.y,
+            left: position.x,
+            background: '#fff',
+            color: '#111',
             padding: '8px 16px',
             borderRadius: '8px',
             fontSize: '14px',
@@ -45,16 +33,16 @@ function DragPage({ text }) {
           }}
           onClick={handleAnalyzeClick}
         >
-          🔍 분석하기
+          <img src={Logo} alt="logo"/>
         </div>
       )}
 
       {showPopup && (
         <div
           style={{
-            position: 'fixed',
-            top: `${position.y + 30}px`,
-            left: `${position.x}px`,
+            position: 'absolute',
+            top: lastRect.top + lastRect.height / 2,
+            left: lastRect.left + lastRect.width / 2,
             width: '300px',
             background: '#fff',
             color: '#000',
