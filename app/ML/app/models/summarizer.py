@@ -4,7 +4,7 @@ from app.models.base_rag import get_default_llm
 from app.utils.logger import logger
 
 
-class SummaryChain():
+class SummaryChain:
     def __init__(
             self
     ):
