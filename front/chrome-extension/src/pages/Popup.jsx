@@ -15,7 +15,6 @@ root.render(
   </MemoryRouter>
 );
 
-
 export default function Popup() {
     const navigate = useNavigate();
     console.log("이건 실행되냐?1");
@@ -46,7 +45,6 @@ export default function Popup() {
                     <img src = {SetIcon} alt="Setting" className="w-7 h-7 ml-[5px]"/>
                 </button>
             </div>
-
             <div className ="flex-1 flex flex-col justify-center">
                 <img className = "w-[230px] h-[220px] mx-auto" src = {MainImg} alt="Pribunny"/>
                 <div className="text-center text-sm mb-2 font-serif">
@@ -58,15 +56,14 @@ export default function Popup() {
                     Start!
                 </button>
             </div>
-<<<<<<< Updated upstream
-=======
+
             <button onClick={() => {
               console.log("Start 버튼 클릭됨");
               navigate('/start');
             }}>
                 Start!
             </button>
->>>>>>> Stashed changes
+
         </div>
     );
 }
