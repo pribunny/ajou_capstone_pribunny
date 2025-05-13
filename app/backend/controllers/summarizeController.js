@@ -7,7 +7,6 @@ const summarizeController = async (req, res) => {
     const { data_size } = req.query;
     const { summaryText } = req.body;
     
-
     if (!summaryText || !data_size) {
       return res.status(400).json({
         success: false,
@@ -77,22 +76,33 @@ const summarizeController = async (req, res) => {
       headers: { 'Content-Type': 'application/json' }
     });
 
+    // 응답을 통합하는 함수
+    function buildSummaryResponse(modelResponse) {
+      if (!modelResponse.success) {
+        throw new Error('요약 실패: ' + (modelResponse.message || 'Unknown Error'));
+      }
 
-     // 모델 응답 처리 (수정할 예정)
-    if (modelResponse.status === 200) {
-      // 모델 응답이 성공적인 경우
-      return res.status(200).json({
+      const { documentId, results } = modelResponse.data;
+
+      const summaryItems = results.flatMap(result => result.summaryItems);
+
+      return {
         success: true,
-        summary: modelResponse.data // 모델이 반환한 요약 결과
-      });
-    } else {
-      // 모델 응답이 실패한 경우
-      return res.status(500).json({
-        success: false,
-        code: 'MODEL_ERROR',
-        message: '모델에서 응답 오류가 발생했습니다.'
-      });
+        code: "SUCCESS",
+        message: "모든 요약 결과를 성공적으로 통합했습니다.",
+        responseTime: new Date().toISOString(),  // 현재 시간
+        data: {
+          documentId: documentId,
+          summaryItems: summaryItems
+        }
+      };
     }
+
+    // 모델 응답을 통합
+    const finalResponse = buildSummaryResponse(modelResponse.data);
+
+    // 최종 응답 반환
+    return res.status(200).json(finalResponse);
 
   } catch (error) {
     console.error('summarizeController Error:', error);
