@@ -1,17 +1,24 @@
 # rag/retriever.py
-from langchain.vectorstores import Milvus
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_milvus import Milvus
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.vectorstores import VectorStoreRetriever
 
-def get_ko_sbert_retriever(collection_name: str = "legal_documents_lib") -> VectorStoreRetriever:
+def get_milvus_retriever(
+        collection_name: str = "legal_documents_lib",
+        host: str = "localhost",
+        port: str = "19530"
+) -> VectorStoreRetriever:
     embedding_model = HuggingFaceEmbeddings(
-        model_name="klue/bert-base",  # 혹은 사용자 임베딩 모델
-        model_kwargs={"device": "cuda"}
+        model_name="jhgan/ko-sbert-sts",
+        model_kwargs={"device": "cpu"}
     )
+
     vectorstore = Milvus(
         embedding_function=embedding_model,
         collection_name=collection_name,
-        connection_args={"host": "localhost", "port": "19530"},
+        connection_args={"host": host, "port": port},
         search_params={"metric_type": "L2", "params": {"nprobe": 10}}
     )
-    return vectorstore.as_retriever(search_kwargs={"k": 3})
+
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    return retriever

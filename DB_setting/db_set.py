@@ -29,8 +29,8 @@ if utility.has_collection(COLLECTION_NAME):
 fields = [
     FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, auto_id=True, max_length=16),
     FieldSchema(name="type", dtype=DataType.VARCHAR, max_length=16),
-    FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=60000),
-    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
+    FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=60000),
+    FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
 
     # Optional - LAW
     FieldSchema(name="law_name", dtype=DataType.VARCHAR, max_length=128),
@@ -56,6 +56,21 @@ fields = [
 
 schema = CollectionSchema(fields=fields)
 collection = Collection(name=COLLECTION_NAME, schema=schema)
+
+if collection.has_index():
+    try:
+        collection.drop_index()
+    except:
+        collection.release()
+        collection.drop_index()
+
+index_params = {
+    'metric_type': 'L2',
+    'index_type': INDEX_TYPE,
+    'params': {"nlist": 1}
+}
+collection.create_index(field_name="vector", index_params=index_params)
+collection.load()
 
 # 데이터 로드
 df = pd.read_csv("legal_documents_metadata.csv", encoding="utf-8")

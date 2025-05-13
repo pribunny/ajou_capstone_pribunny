@@ -2,7 +2,7 @@ from langchain.prompts import PromptTemplate
 
 # 독소조항 탐지 수정(++구체적인 법명 언급, 작성 지침 추가)
 unfair_detect_template = PromptTemplate(
-    input_variables=["context", "question", "law_clause"],
+    input_variables=["context", "question"],
     template=(
         # 1. context(관련 법률)과 Instructions(개인정보처리방침 작성 가이드라인)을 기반으로 full_clause(개인정보처리방침 항목)와 맞지 않는 부분이 있는 지 확인
         # 2. 만약 존재한다면, 그 이유를 제시
@@ -41,12 +41,12 @@ unfair_detect_template = PromptTemplate(
         "1) 문제 표현: <문제가 되는 문장을 그대로 작성>\n"
         "2) 문제 이유: <위 원칙에 따라 서술된 문제 설명 포함>\n"
         "3) 근거 기준:\n"
-        "   - 관련 법령 조항: {law_clause}\n"
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 관련 법령 조항은 반드시 이 {law_clause} 값을 그대로 출력해야 하며, 모델이 임의로 수정하거나 재조합하지 마십시오.\n"
-        "- 반드시 주어진 {law_clause} 형식으로 작성하십시오.\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-        "답변은 반드시1~3번 항목)까지만 포함되며, 그 외의 문장은 절대 작성하지 마십시오."
+        # "   - 관련 법령 조항: {law_clause}\n"
+        # "※ 근거 기준 명시할 때 주의사항\n"
+        # "- 관련 법령 조항은 반드시 이 {law_clause} 값을 그대로 출력해야 하며, 모델이 임의로 수정하거나 재조합하지 마십시오.\n"
+        # "- 반드시 주어진 {law_clause} 형식으로 작성하십시오.\n"
+        # "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+        # "답변은 반드시1~3번 항목)까지만 포함되며, 그 외의 문장은 절대 작성하지 마십시오."
         
 
         "※ 작성 가이드라인:\n"

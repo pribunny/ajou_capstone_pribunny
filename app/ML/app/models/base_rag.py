@@ -24,16 +24,15 @@ class BaseRAGChain:
             self,
             retriever: VectorStoreRetriever,
             prompt: PromptTemplate,
-            llm: BaseChatModel,
-            return_source_documents_type: True,
+            return_source_documents_type: bool = True,
             chain_type: str = "stuff"
     ):
         self.retriever = retriever
         self.prompt = prompt
         self.llm = get_default_llm()
         self.chain_type = chain_type
-        self._build_chain()
         self.return_source_documents_type = return_source_documents_type
+        self._build_chain()
 
     def _build_chain(self):
         from langchain.chains import RetrievalQA
@@ -53,3 +52,4 @@ class BaseRAGChain:
             return self.chain.invoke({"query": query_or_document["query"]})
         else:
             raise ValueError("지원하지 않는 입력 형식입니다.")
+

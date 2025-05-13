@@ -4,7 +4,7 @@ from app.models.base_rag import get_default_llm
 from app.utils.logger import logger
 
 
-class SummaryChain():
+class SummaryChain:
     def __init__(
             self
     ):
@@ -22,4 +22,4 @@ def summary_clause(input_text:str):
     logger.info("요약 체인 작동 시작")
     chain = SummaryChain()
     result = chain.run(input_text)
-    return {"result": result}
+    return result
