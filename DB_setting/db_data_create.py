@@ -4,14 +4,10 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import torch
-from transformers import AutoTokenizer, AutoModel
+from sentence_transformers import SentenceTransformer
 
-MODEL = 'klue/bert-base'
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL)
-model = AutoModel.from_pretrained(MODEL).to(DEVICE)
-model.eval()
+MODEL = 'jhgan/ko-sbert-sts'
+model = SentenceTransformer(MODEL, device='cuda' if torch.cuda.is_available() else 'cpu')
 
 def parse_filename(filename):
     name = os.path.splitext(filename)[0]
@@ -57,20 +53,17 @@ def build_law_dataframe(root_dir):
                     })
     return pd.DataFrame(rows)
 
-def get_klue_embeddings(text_list):
-    embeddings = []
-    for text in tqdm(text_list, desc="Embedding"):
-        inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
-        inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-        with torch.no_grad():
-            output = model(**inputs)
-            cls_embedding = output.last_hidden_state[:, 0, :]
-            embeddings.append(cls_embedding.squeeze().cpu().numpy())
-    return np.vstack(embeddings)
+def get_sentence_embeddings(text_list):
+    return model.encode(
+        text_list,
+        batch_size=16,
+        show_progress_bar=True,
+        convert_to_numpy=True
+    )
 
 if __name__ == "__main__":
     df = build_law_dataframe("./법률")
-    embeddings = get_klue_embeddings(df["content"].tolist())
+    embeddings = get_sentence_embeddings(df["content"].tolist())
 
     # 저장
     df.to_csv("legal_documents_metadata.csv", index=False, encoding="utf-8")

@@ -14,3 +14,13 @@ class BaseResponse(BaseModel, Generic[T]):
     message: str
     responseTime: datetime
     data: Optional[T]
+
+
+def make_base_response(data: T, message=str, code: str = "SUCESS") -> BaseResponse[T]:
+    return BaseResponse(
+        data=data,
+        success=True,
+        code=code,
+        message=message,
+        responseTime=datetime.utcnow().isoformat()
+    )
