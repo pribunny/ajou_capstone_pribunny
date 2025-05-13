@@ -70,7 +70,7 @@ export default function SettingAddPrivacy() {
               {item}
             </label>
           ))}
-          {/* ✅ 사용자 추가 항목 */}
+          {/* ✅ 사용자 추가 항목
           {(customInputs[selectedCategory] || []).map(item => (
             <label key={item} className="inline-flex items-center mr-4 mb-1">
               <input
@@ -87,9 +87,9 @@ export default function SettingAddPrivacy() {
             onClick={() => setInputVisible(true)}
           >
             ＋ 수집 항목 추가
-          </button>
+          </button> */}
 
-          {/* 입력창: visible 상태일 때만 표시 */}
+          {/* 입력창: visible 상태일 때만 표시
           {inputVisible && (
             <input
               type="text"
@@ -108,14 +108,14 @@ export default function SettingAddPrivacy() {
                 }
               }}
             />
-          )}
+          )} */}
         </div>
       )}
 
       {/* 신체적 정보 및 정신적 정보 항목 렌더링 */}
       {selectedCategory === '신체정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목 */}
+          {/* ✅ 사용자 추가 항목
           {(customInputs[selectedCategory] || []).map(item => (
             <label key={item} className="inline-flex items-center mr-4 mb-1">
               <input
@@ -132,9 +132,9 @@ export default function SettingAddPrivacy() {
             onClick={() => setInputVisible(true)}
           >
             ＋ 수집 항목 추가
-          </button>
+          </button> */}
 
-          {/* 입력창: visible 상태일 때만 표시 */}
+          {/* 입력창: visible 상태일 때만 표시
           {inputVisible && (
             <input
               type="text"
@@ -153,7 +153,7 @@ export default function SettingAddPrivacy() {
                 }
               }}
             />
-          )}
+          )} */}
           <h3 className="font-semibold mb-1">의료·건강 정보</h3>
           {['건강상태', '진료기록', '병력', '신체장애', '장애등급'].map(item => (
             <label key={item} className="block mb-1">
@@ -202,7 +202,7 @@ export default function SettingAddPrivacy() {
       {/* 사회적 정보 항목 렌더링 */}
       {selectedCategory === '인적사항' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목 */}
+          {/* ✅ 사용자 추가 항목
           {(customInputs[selectedCategory] || []).map(item => (
             <label key={item} className="inline-flex items-center mr-4 mb-1">
               <input
@@ -219,9 +219,9 @@ export default function SettingAddPrivacy() {
             onClick={() => setInputVisible(true)}
           >
             ＋ 수집 항목 추가
-          </button>
+          </button> */}
 
-          {/* 입력창: visible 상태일 때만 표시 */}
+          {/* 입력창: visible 상태일 때만 표시
           {inputVisible && (
             <input
               type="text"
@@ -240,7 +240,7 @@ export default function SettingAddPrivacy() {
                 }
               }}
             />
-          )}
+          )} */}
           <h3 className="font-semibold mb-1">가족 정보</h3>
           {['가족관계 및 가족구성원 정보', '법정대리인정보'].map(item => (
             <label key={item} className="block mb-1">
@@ -275,7 +275,7 @@ export default function SettingAddPrivacy() {
       {selectedCategory === '사회정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
           {/* 교육 정보 */}
-          {/* ✅ 사용자 추가 항목 */}
+          {/* ✅ 사용자 추가 항목
           {(customInputs[selectedCategory] || []).map(item => (
             <label key={item} className="inline-flex items-center mr-4 mb-1">
               <input
@@ -292,9 +292,9 @@ export default function SettingAddPrivacy() {
             onClick={() => setInputVisible(true)}
           >
             ＋ 수집 항목 추가
-          </button>
+          </button> */}
 
-          {/* 입력창: visible 상태일 때만 표시 */}
+          {/* 입력창: visible 상태일 때만 표시
           {inputVisible && (
             <input
               type="text"
@@ -313,7 +313,7 @@ export default function SettingAddPrivacy() {
                 }
               }}
             />
-          )}
+          )} */}
           <h3 className="font-semibold mb-1">교육 정보</h3>
           {['학력', '성적', '기술 자격증 및 전문 면허증 보유 내역'].map(item => (
             <label key={item} className="block mb-1">
@@ -377,7 +377,7 @@ export default function SettingAddPrivacy() {
 
       {selectedCategory === '재산정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목 */}
+          {/* ✅ 사용자 추가 항목
           {(customInputs[selectedCategory] || []).map(item => (
             <label key={item} className="inline-flex items-center mr-4 mb-1">
               <input
@@ -394,9 +394,9 @@ export default function SettingAddPrivacy() {
             onClick={() => setInputVisible(true)}
           >
             ＋ 수집 항목 추가
-          </button>
+          </button> */}
 
-          {/* 입력창: visible 상태일 때만 표시 */}
+          {/* 입력창: visible 상태일 때만 표시
           {inputVisible && (
             <input
               type="text"
@@ -415,7 +415,7 @@ export default function SettingAddPrivacy() {
                 }
               }}
             />
-          )}
+          )} */}
           {/* 소득 정보 */}
           <h3 className="font-semibold mb-1">소득 정보</h3>
           {['봉급액', '이자소득', '사업소득'].map(item => (

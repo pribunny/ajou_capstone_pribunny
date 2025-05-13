@@ -1,4 +1,3 @@
-
 // 현재 프로젝트에선 서버로 데이터를 업데이트하거나 수정하는 등의 기능은 없음
 // 따라서, GET 요청만 작성하면 됨
 // 하지만, GET 요청의 경우 Data를 보낼 수 없음 
@@ -10,24 +9,24 @@
 import apiClient from './apiClient';
 const USE_MOCK = true;
 
-export const getSummarize = async(input_data, split) => {
+export const getUnfairDetect = async(input_data, split) => {
     if (USE_MOCK) {
         return {
-        summaryId: 'abc123',
-        summaryItems: [
-            {
-            category: 'collection-purpose',
-            summary_content: '회사는 서비스 제공을 위해 최소한의 개인정보를 수집하며, 수집된 정보는 맞춤형 서비스 제공 목적으로 활용됩니다.',
-            },
-            {
-            category: 'third-party',
-            summary_content: '회사는 고객 동의를 받아 개인정보를 제3자에게 제공하며, 제공받는 자, 제공 항목, 이용 목적 등을 명확히 고지합니다.',
-            }
+        unfairId: 'def123',
+        unfairItems: [
+          {
+            category: 'pressure',
+            detect_content: '이 항목은 사용자가 서비스를 해지하기 어렵게 구성되어 있어 선택을 압박할 수 있습니다.'
+          },
+          {
+            category: 'obstruction',
+            detect_content: '이 항목은 사용자가 정보를 쉽게 찾지 못하도록 숨겨져 있어 접근을 방해합니다.'
+          }
         ]
         };
     }
     try{
-        const response = await apiClient.post('/api/summary',
+        const response = await apiClient.post('/api/unfair',
         {input_data}, 
         {params : { data_size: split }}
     );
