@@ -75,7 +75,7 @@ summary_short_template = PromptTemplate(
         # 다음 순서를 따르라.
         # 1 - 받은 내용을 해당하는 9가지 항목(main_category)과 연결지어라.( 하나의 내용에서 여러 항목이 선택될 수 있다. 항목에 맞는 내용을 분할해 연결지어라.)
         # 2 - '기타' 항목에 해당하는 내용은, 아래 세부 항목(sub_category) 중에서 해당 하는 것과 연결지어라.
-        # 3 - 각 항목별로 내용을 요약해라. 항목마다 들어가야하는 주요 내용은 다음과 같다.(category-specific instructions)
+        # 3 - 각 항목별로 내용을 요약해라. 항목마다 들어가야 하는 주요 내용은 다음과 같다.(category-specific instructions)
         "You are a helpful assistant. Answer only based on the given Full_clause.\n\n"
         "Summarize the content, but do not omit contextually important information.\n\n"
         "Strictly follow all the steps. Never skip or merge steps.\n\n"

@@ -25,7 +25,11 @@ app.use(express.json());
 const indexRoutes = require("./routes/index");
 app.use("/api", indexRoutes);
 
+// 요약 라우터
+const summarizeRoutes = require("./routes/summarize")
+app.use("/api/summary", summarizeRoutes);
+
 // 서버 실행
 https.createServer(sslOptions, app).listen(PORT, () => {
-    console.log(`🔒 HTTPS server running at https://localhost:${PORT}/api`);
+    console.log(`🔒 HTTPS server running at https://localhost:${PORT}`);
 });
