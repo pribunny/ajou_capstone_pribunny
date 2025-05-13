@@ -1,8 +1,20 @@
 /* global chrome */
 import {React, useEffect} from 'react';
+import { createRoot } from 'react-dom/client'; // ✅ 이거 반드시 있어야 함
+import { MemoryRouter } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
 import MainImg from '../assets/main_bunny.jpg';
+import App from '../App'; // 이 App에 모든 Route가 정의되어 있음
+
+const root = createRoot(document.getElementById('root'));
+
+root.render(
+  <MemoryRouter initialEntries={['/']}>
+    <App />
+  </MemoryRouter>
+);
+
 
 export default function Popup() {
     const navigate = useNavigate();
@@ -46,6 +58,15 @@ export default function Popup() {
                     Start!
                 </button>
             </div>
+<<<<<<< Updated upstream
+=======
+            <button onClick={() => {
+              console.log("Start 버튼 클릭됨");
+              navigate('/start');
+            }}>
+                Start!
+            </button>
+>>>>>>> Stashed changes
         </div>
     );
 }
