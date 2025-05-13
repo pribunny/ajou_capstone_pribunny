@@ -1,57 +1,113 @@
-const axios = require("axios");
-const { splitHtmlToParagraphs } = require("../utils/htmlParser");
+const htmlToMarkdown = require('../utils/htmlToMarkdown');
+const splitParagraphs = require('../utils/splitParagraphs');
+const axios = require('axios');
 
-const FASTAPI_SUMMARIZE_URL = "http://backend-ml:8000/llm/summaries/";
-
-exports.summarizeText = async (req, res) => {
-    const { summaryText } = req.body;
+const summarizeController = async (req, res) => {
+  try {
     const { data_size } = req.query;
+    const { summaryText } = req.body;
+    
 
-    if (!summaryText) {
-        console.warn("⚠️ 텍스트가 비어 있습니다.");
-        return res.status(400).json({ error: "요약할 텍스트가 필요합니다." });
+    if (!summaryText || !data_size) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_REQUEST',
+        message: 'summaryText와 data_size는 필수입니다.'
+      });
     }
 
+    console.log('✅ 원본 summaryText (HTML):\n', summaryText);
+
+    const documentId = generateDocumentId(); // 랜덤 ID 생성 
+
+    // 1. HTML -> Markdown 변환
+    let markdownText;
     try {
-        let allSummaries = [];
-
-        if (data_size === "long") {
-            const paragraphs = splitHtmlToParagraphs(summaryText);
-            console.log("📄 분리된 문단:", paragraphs);
-
-            const summaryPromises = paragraphs.map(async (paragraph, idx) => {
-                console.log(`📤 문단 ${idx + 1} 전송:`, paragraph);
-                const response = await axios.post(FASTAPI_SUMMARIZE_URL, {
-                    inputContext: paragraph,
-                });
-                const summaryItems = response.data.data.summaryItems.map(item => ({
-                    category_name: item.category_name,
-                    summarize_content: item.summarize_content
-                }));
-
-                console.log(`📥 문단 ${idx + 1} 응답 요약:`, summaryItems);
-
-                return summaryItems;
-            });
-
-            const allItemsNested = await Promise.all(summaryPromises);
-            allSummaries = allItemsNested.flat()
-
-        } else {
-            const response = await axios.post(FASTAPI_SUMMARIZE_URL, {
-                inputContext: summaryText,
-            });
-            allSummaries = response.data.data.summaryItems.map(item => ({
-                category_name: item.category_name,
-                summarize_content: item.summarize_content
-            }));
-        }
-
-        return res.json({ summary: allSummaries });
-
+      markdownText = htmlToMarkdown(summaryText);
+      console.log('✅ 변환된 Markdown:\n', markdownText);
     } catch (error) {
-        console.error("🔥 [오류 발생] FastAPI 호출 중 오류");
-        console.error("🧾 error.message:", error.message);
-        res.status(500).json({ error: "요약 처리 실패", detail: error.message });
+      console.error('HTML -> Markdown 변환 중 오류 발생:', error);
+      return res.status(500).json({
+        success: false,
+        code: 'HTML_TO_MARKDOWN_ERROR',
+        message: 'HTML -> Markdown 변환 중 오류가 발생했습니다.'
+      });
     }
+
+    // 2. data_size가 'long'일 때만 문단 분리 수행
+    let paragraphs = [];
+    try {
+      if (data_size === 'long') {
+        paragraphs = splitParagraphs(markdownText);
+      } else if (data_size === 'short') {
+        paragraphs = [markdownText];
+      } else {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_DATASIZE',
+          message: 'data_size는 long 또는 short만 가능합니다.'
+        });
+      }
+    } catch (error) {
+      console.error('문단 분리 중 오류 발생:', error);
+      return res.status(500).json({
+        success: false,
+        code: 'PARAGRAPH_SPLIT_ERROR',
+        message: '문단 분리 중 오류가 발생했습니다.'
+      });
+    }
+    
+    const requestBody = {
+      documentId: documentId,
+      contexts: paragraphs
+    };
+
+    // ✅ 모델 서버에 보낼 데이터 로그 출력
+    console.log('✅ [모델 요청 데이터]');
+    console.log(`- documentId: ${requestBody.documentId}`);
+    console.log(`- paragraphs 개수: ${requestBody.contexts.length}`);
+    console.log('- paragraphs 내용:');
+    requestBody.contexts.forEach((para, idx) => {
+      console.log(`  [${idx + 1}] ${para}`);
+    });
+    
+    const apiUrl = `http://backend-ml:8000/llm/summaries/`;
+
+    const modelResponse = await axios.post(apiUrl, requestBody, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+
+     // 모델 응답 처리 (수정할 예정)
+    if (modelResponse.status === 200) {
+      // 모델 응답이 성공적인 경우
+      return res.status(200).json({
+        success: true,
+        summary: modelResponse.data // 모델이 반환한 요약 결과
+      });
+    } else {
+      // 모델 응답이 실패한 경우
+      return res.status(500).json({
+        success: false,
+        code: 'MODEL_ERROR',
+        message: '모델에서 응답 오류가 발생했습니다.'
+      });
+    }
+
+  } catch (error) {
+    console.error('summarizeController Error:', error);
+    return res.status(500).json({
+      success: false,
+      code: 'SERVER_ERROR',
+      message: error.message
+    });
+  }
 };
+
+// 랜덤 Document ID 생성 함수 (ex: 'doc-20240512-abcdef')
+const generateDocumentId = () => {
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  return `doc-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${randomStr}`;
+};
+
+module.exports = summarizeController;

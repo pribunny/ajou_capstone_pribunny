@@ -8,3 +8,4 @@ langchain_openai==0.3.14
 pydantic==2.11.3
 python-dotenv==1.1.0
 uvicorn==0.34.2
+shortuuid==1.0.13
