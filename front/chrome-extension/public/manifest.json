@@ -9,14 +9,16 @@
     "48": "extension_logo.png",
     "128": "extension_logo.png"
   },
-
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "index.html"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["getSource.js"],
+      "js": ["content.js"],
       "run_at": "document_idle",
       "all_frames": true
     }
@@ -27,5 +29,11 @@
   ],
   "host_permissions": [
     "https://*/"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["extension_logo.png"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
