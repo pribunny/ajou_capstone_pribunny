@@ -21,7 +21,7 @@ class SummaryRequest(BaseModel):
 
 class SummaryItem(BaseModel):
     category: str
-    context: str
+    context: List[str]
     summaryItems: List[Dict[str, Any]]
 
 class SummaryData(BaseModel):
@@ -54,7 +54,7 @@ async def summarize_privacy_policy(request: SummaryRequest):
 
             return SummaryItem(
                 category=cat,
-                context=merged_context,
+                context=paragraphs,
                 summaryItems=items
             )
 
