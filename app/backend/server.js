@@ -29,6 +29,10 @@ app.use("/api", indexRoutes);
 const summarizeRoutes = require("./routes/summarize")
 app.use("/api/summary", summarizeRoutes);
 
+// 요약 라우터
+const unfairdetectRoutes = require("./routes/unfairdetect")
+app.use("/api/unfairDetect", unfairdetectRoutes);
+
 // 서버 실행
 https.createServer(sslOptions, app).listen(PORT, () => {
     console.log(`🔒 HTTPS server running at https://localhost:${PORT}`);
