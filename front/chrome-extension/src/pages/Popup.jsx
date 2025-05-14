@@ -56,14 +56,6 @@ export default function Popup() {
                     Start!
                 </button>
             </div>
-
-            <button onClick={() => {
-              console.log("Start 버튼 클릭됨");
-              navigate('/start');
-            }}>
-                Start!
-            </button>
-
         </div>
     );
 }
