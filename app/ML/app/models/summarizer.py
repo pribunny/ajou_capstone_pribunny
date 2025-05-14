@@ -1,7 +1,7 @@
 from langchain_core.runnables import Runnable, RunnableSequence
 from langchain_core.prompts import PromptTemplate
 from app.prompts.summariz_prompt import summary_template
-from app.models.base_rag import get_default_llm
+from app.models.llm import get_default_llm
 from app.utils.logger import logger
 
 

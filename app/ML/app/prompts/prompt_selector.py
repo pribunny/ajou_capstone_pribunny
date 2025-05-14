@@ -1,4 +1,5 @@
 from app.prompts.summariz_prompt import summary_template
+from app.prompts.unfair_clause_prompt import unfair_detect_template
 
 PROMPT_SUM_MAP = {
     "processingPurpose": summary_template,
@@ -18,5 +19,26 @@ PROMPT_SUM_MAP = {
     "behavioralTrakingByThirdParties": summary_template,
 }
 
-def get_prompt_summary(category: str):
+def get_summary_detect(category: str):
     return PROMPT_SUM_MAP.get(category, summary_template)
+
+PROMPT_DET_MAP = {
+    "processingPurpose": unfair_detect_template,
+    "collectedItems": unfair_detect_template,
+    "retentionPeriod": unfair_detect_template,
+    "destructionProcedure": unfair_detect_template,
+    "securityMeasures": unfair_detect_template,
+    "dataSubjectRights": unfair_detect_template,
+    "privacyOfficerInfo": unfair_detect_template,
+    "policychanges": unfair_detect_template,
+    "thirdPartySharing": unfair_detect_template,
+    "additionalUseCriteria": unfair_detect_template,
+    "outsourcingInfo": unfair_detect_template,
+    "overseasTransfer": unfair_detect_template,
+    "sensitiveInfoDisclosure": unfair_detect_template,
+    "autoCollectionDevices": unfair_detect_template,
+    "behavioralTrakingByThirdParties": unfair_detect_template
+}
+
+def get_detect_prompt(category: str):
+    return PROMPT_DET_MAP.get(category, unfair_detect_template)

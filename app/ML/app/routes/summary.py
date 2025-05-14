@@ -1,18 +1,15 @@
 import asyncio
-from datetime import datetime
 from fastapi import HTTPException, APIRouter
 from pydantic import BaseModel
-from typing import List, Optional, Generic, TypeVar, Dict, Any
+from typing import List, TypeVar, Dict, Any
 from collections import defaultdict
 
-from app.prompts.prompt_selector import get_prompt_summary
+from app.prompts.prompt_selector import get_summary_detect
 from app.utils.logger import logger
 from app.models.summarizer import SummaryChain
-from app.routes.base import BaseRequest, BaseResponse, make_base_response
+from app.routes.base import BaseResponse, make_base_response
 from app.utils.category_classification import get_category_classify, TextBatch
-
-import json
-import re
+from app.utils.json_parser import extract_json_from_response
 
 summary = APIRouter(prefix='/llm/summaries')
 
@@ -22,13 +19,6 @@ class SummaryRequest(BaseModel):
     documentId: str
     contexts: List[str]
 
-class SummaryResponse(BaseModel, Generic[T]):
-    success: bool
-    code: str
-    message: str
-    responseTime: datetime
-    data: Optional[T]
-
 class SummaryItem(BaseModel):
     category: str
     context: str
@@ -37,17 +27,6 @@ class SummaryItem(BaseModel):
 class SummaryData(BaseModel):
     documentId: str
     results: List[SummaryItem]
-
-def extract_json_from_response(text: str):
-    # 답변 json으로 파싱하기
-    try:
-        match = re.search(r"```json\n(.+?)\n```", text, re.DOTALL)
-        if not match:
-            raise ValueError("JSON 블록을 찾을 수 없습니다.")
-        json_str = match.group(1)
-        return json.loads(json_str)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"JSON 파싱 오류: {e}")
 
 @summary.post('/', response_model=BaseResponse[SummaryData])
 async def summarize_privacy_policy(request: SummaryRequest):
@@ -66,11 +45,12 @@ async def summarize_privacy_policy(request: SummaryRequest):
             category_to_contexts[category].append(paragraph)
 
         async def summarize_paragraph(cat: str, paragraphs: list[str]) -> SummaryItem:
-            prompt = get_prompt_summary(cat)
+            prompt = get_summary_detect(cat)
             merged_context = "\n\n".join(paragraphs)
             summary_chain = SummaryChain(prompt=prompt)
             llm_result = await summary_chain.run_async(input_text=merged_context)
             items = extract_json_from_response(llm_result.content)
+            print(llm_result)
 
             return SummaryItem(
                 category=cat,
