@@ -9,35 +9,59 @@
 import apiClient from './apiClient';
 const USE_MOCK = true;
 
-export const getUnfairDetect = async(input_data, split) => {
-    if (USE_MOCK) {
-        return {
-        unfairId: 'def123',
-        unfairItems: [
-          {
-            category: 'pressure',
-            detect_content: '이 항목은 사용자가 서비스를 해지하기 어렵게 구성되어 있어 선택을 압박할 수 있습니다.'
-          },
-          {
-            category: 'obstruction',
-            detect_content: '이 항목은 사용자가 정보를 쉽게 찾지 못하도록 숨겨져 있어 접근을 방해합니다.'
-          }
-        ]
-        };
-    }
-    try{
-        const response = await apiClient.post('/api/unfair',
-        {input_data}, 
-        {params : { data_size: split }}
-    );
-        if(response?.status === 200) return response.data.data;
-    }catch(err){
-        if(err.response?.status === 400){
-            const error = new Error('에러에 관한 설명');
-            error.code = 'Bad Request';
-            throw error;
-        }
-        if(err.response?.status === 401){}
-        if(err.response?.status === 408){}
-    }
+//export const getUnfairDetect = async(input_data, split) => {
+//    if (USE_MOCK) {
+//        return {
+//        unfairId: 'def123',
+//        unfairItems: [
+//          {
+//            category: 'pressure',
+//            detect_content: '이 항목은 사용자가 서비스를 해지하기 어렵게 구성되어 있어 선택을 압박할 수 있습니다.'
+//          },
+//          {
+//            category: 'obstruction',
+//            detect_content: '이 항목은 사용자가 정보를 쉽게 찾지 못하도록 숨겨져 있어 접근을 방해합니다.'
+//          }
+//        ]
+//        };
+//    }
+//    try{
+//        const response = await apiClient.post('/api/unfair',
+//        {input_data},
+//        {params : { data_size: split }}
+//    );
+//        if(response?.status === 200) return response.data.data;
+//    }catch(err){
+//        if(err.response?.status === 400){
+//            const error = new Error('에러에 관한 설명');
+//            error.code = 'Bad Request';
+//            throw error;
+//        }
+//        if(err.response?.status === 401){}
+//        if(err.response?.status === 408){}
+//    }
+//};
+
+export const getUnfairDetect = async (input_data, split) => {
+  if (USE_MOCK) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          unfairId: 'def123',
+          unfairItems: [
+            {
+              category: 'pressure',
+              detect_content: '이 항목은 사용자가 서비스를 해지하기 어렵게 구성되어 있어 선택을 압박할 수 있습니다.'
+            },
+            {
+              category: 'obstruction',
+              detect_content: '이 항목은 사용자가 정보를 쉽게 찾지 못하도록 숨겨져 있어 접근을 방해합니다.'
+            }
+          ]
+        });
+      }, 2000); // 2초 지연
+    });
+  }
+
+  // 이하 실제 API 호출 부분
 };

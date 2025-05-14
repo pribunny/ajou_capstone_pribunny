@@ -26,37 +26,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         documentId: 'abc123',
         summary: [
           {
-            category: 'collection-purpose',
-            summary_content: '회사는 서비스 제공을 위해 최소한의 개인정보를 수집하며, 수집된 정보는 맞춤형 서비스 제공 목적으로 활용됩니다.'
+            category: "개인정보의 처리 및 보유 기간",
+            summary_content: "동의 철회 또는 탈퇴 요청 후 5일 이내 지체 없이 개인정보를 파기합니다."
           },
           {
-            category: 'third-party',
-            summary_content: '회사는 고객 동의를 받아 개인정보를 제3자에게 제공하며, 제공받는 자, 제공 항목, 이용 목적 등을 명확히 고지합니다.'
+            category: "기타",
+            summary_content: "무신사 스토어, 29CM 등의 다양한 서비스 정보를 제공하며, 원하지 않을 경우 언제든지 알림 설정을 통해 철회할 수 있습니다. 선택적 개인정보 수집 및 이용은 거부할 수 있으며, 동의하지 않아도 서비스 이용은 가능하지만 혜택 정보 제공은 제한될 수 있습니다."
           }
         ]
       }
     };
 
 
-    const dummyDetect = {
-      success: true,
-      code: 'SUCCESS',
-      message: '모든 탐지 결과를 성공적으로 반환했습니다.',
-      responseTime: '2025-05-12T13:35:00.000000',
-      data: {
-        documentId: 'abc123',
-        detect: [
-          {
-            category: 'pressure',
-            detect_content: '이 항목은 사용자가 서비스를 해지하기 어렵게 구성되어 있어 선택을 압박할 수 있습니다.'
-          },
-          {
-            category: 'obstruction',
-            detect_content: '이 항목은 사용자가 정보를 쉽게 찾지 못하도록 숨겨져 있어 접근을 방해합니다.'
-          }
-        ]
-      }
-    };
+
+       const dummyDetect = {
+         success: true,
+         code: 'SUCCESS',
+         message: '탐지된 결과가 없습니다.',
+         responseTime: '2025-05-12T13:35:00.000000',
+         data: {
+           documentId: 'abc123',
+           detect: []
+         }
+       };
 
 
     const result = {
@@ -90,14 +82,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     Promise.allSettled([summary_req, detect_req])
         .then(([summary_res, detect_res]) => {
             const result = {
-                summary : summary_req.status === 'fulfilled' ? summary_res.value : null,
-                detect : detect_req.status === 'fulfilled' ? detect_req.value : null,
+                summary : summary_res.status === 'fulfilled' ? summary_res.value : null,
+                detect : detect_res.status === 'fulfilled' ? detect_res.value : null,
             };
             const error = {
-                summary : summary_req.status === 'rejected' ? summary_req.reason.toString() : null,
-                detect : detect_req.status === 'rejected' ? detect_req.reason.toString() : null,
+                summary : summary_res.status === 'rejected' ? summary_res.reason.toString() : null,
+                detect : detect_res.status === 'rejected' ? detect_res.reason.toString() : null,
             };
-            const success = summary_req.status === 'fulfilled' && detect_req.status === 'fulfilled';
+            const success = summary_res.status === 'fulfilled' && detect_res.status === 'fulfilled';
 
             console.log('[Background] 서버 응답 결과 : ', {success, result, error});
             sendResponse({success, result, error});

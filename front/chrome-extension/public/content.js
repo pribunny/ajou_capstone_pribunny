@@ -148,7 +148,20 @@ function showResult(summary, detect){
     detect_title.textContent = '불공정 조항 탐지 결과';
     detect_all_elements.appendChild(detect_title);
 
-    detect.data.detect.forEach(item => { //각각의 데이터를 하나씩 출력한다.
+    if (detect.data.detect && detect.data.detect.length === 0) {
+      //탐지된 결과가 없는 경우에 대한 처리
+        const detect_element = document.createElement('div');
+        const detect_category = document.createElement('span');
+        detect_category.textContent = '탐지된 결과가 없습니다.';
+
+
+        //생성한 요소를 추가한다.
+        detect_element.appendChild(detect_category);
+        detect_all_elements.appendChild(detect_element);
+    }
+
+    else{
+        detect.data.detect.forEach(item => { //각각의 데이터를 하나씩 출력한다.
         const detect_element = document.createElement('div');
         const detect_category = document.createElement('span');
         detect_category.textContent = `[${item.category}]`;
@@ -160,7 +173,8 @@ function showResult(summary, detect){
         detect_element.appendChild(detect_category);
         detect_element.appendChild(detect_content);
         detect_all_elements.appendChild(detect_element);
-    });
+        });
+    }
 
 
     //요약 결과 출력 코드

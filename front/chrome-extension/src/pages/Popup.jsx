@@ -17,26 +17,8 @@ root.render(
 
 export default function Popup() {
     const navigate = useNavigate();
-    console.log("이건 실행되냐?1");
+    console.log("[Popup] : 실행됨");
 
-    useEffect(() => {
-        // 현재 탭에 메시지 보내기
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "give_full_data" });
-        });
-
-        // 응답 받을 리스너
-        const handleMessage = (request) => {
-            if (request.action === "take_full_data") {
-                console.log("✅ 받은 텍스트:", request.source);
-            }
-        };
-
-        chrome.runtime.onMessage.addListener(handleMessage);
-        return () => chrome.runtime.onMessage.removeListener(handleMessage);
-    }, []);
-
-    console.log("이건 실행되냐?2");
     return (
         <div className="w-[360px] h-[460px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
             <div className="flex items-center relative h-[40px]">
