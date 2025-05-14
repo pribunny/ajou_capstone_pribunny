@@ -1,12 +1,18 @@
 from langchain_core.runnables import Runnable, RunnableSequence
-from app.prompts.unfair_clause_prompt import unfair_detect_template
-from app.models.base_rag import get_default_llm
-from app.utils.logger import logger
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain.prompts import PromptTemplate
 
+from app.prompts.unfair_clause_prompt import unfair_detect_template
+from app.models.base_rag import get_default_llm
+from app.utils.logger import logger
+
+
 class DetectChain:
-    def __init__(self, retriever: VectorStoreRetriever, prompt: PromptTemplate):
+    def __init__(
+            self,
+            retriever: VectorStoreRetriever,
+            prompt: PromptTemplate
+    ):
         self.llm=get_default_llm()
         self.prompt=prompt
         self.retriever=retriever

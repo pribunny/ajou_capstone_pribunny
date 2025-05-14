@@ -2,7 +2,7 @@ from langchain.prompts import PromptTemplate
 
 # 독소조항 탐지 수정(++구체적인 법명 언급, 작성 지침 추가)
 unfair_detect_template = PromptTemplate(
-    input_variables=["context", "question"],
+    input_variables=["context", "query"],
     template=(
         # 1. context(관련 법률)과 Instructions(개인정보처리방침 작성 가이드라인)을 기반으로 full_clause(개인정보처리방침 항목)와 맞지 않는 부분이 있는 지 확인
         # 2. 만약 존재한다면, 그 이유를 제시
@@ -34,13 +34,14 @@ unfair_detect_template = PromptTemplate(
         "Full_clause:\n{question}\n\n"
         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음과 같이 작성하십시오:\n"
-        "'해당 항목은 법률 및 개인정보처리방침 작성 가이드라인에 위반되는 사항이 없습니다.'\n"
+        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+        "isUnfair: false\n"
 
         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "1) 문제 표현: <문제가 되는 문장을 그대로 작성>\n"
-        "2) 문제 이유: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "3) 근거 기준:\n"
+        "isUnfair: true"
+        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+        "legalBasis: <근거 기준>\n"
         # "   - 관련 법령 조항: {law_clause}\n"
         # "※ 근거 기준 명시할 때 주의사항\n"
         # "- 관련 법령 조항은 반드시 이 {law_clause} 값을 그대로 출력해야 하며, 모델이 임의로 수정하거나 재조합하지 마십시오.\n"
