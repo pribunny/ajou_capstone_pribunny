@@ -35,12 +35,13 @@ export default function ResultUnfairDetail() {
       </button>
 
       {/* 독소조항 상세내용 영역 */}
-      <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm whitespace-pre-wrap text-left">
-
+      <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm text-left">
         {unfairItems.map((item, idx) => (
-          <div key={idx}>
-            <strong>{item.category}</strong><br />
-            {item.detect_content}
+          <div key={idx} className="mb-4">
+            <strong className="block mb-1">{item.category}</strong>
+            {item.detect_content.split('\n').map((line, i) => (
+              <p key={i} className="m-0 p-0 leading-snug">{line}</p>
+            ))}
           </div>
         ))}
       </div>

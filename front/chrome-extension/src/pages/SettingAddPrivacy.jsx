@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackIcon from '../assets/back-button.png';
 import HomeIcon from '../assets/home-button.png';
@@ -14,6 +14,15 @@ export default function SettingAddPrivacy() {
   const [currentInput, setCurrentInput] = useState('');
   const [inputVisible, setInputVisible] = useState(false);
 
+  useEffect(() => {
+    chrome.storage.local.get(['privacySelections'], (result) => {
+      if (result.privacySelections) {
+        setSelectedCategory(result.privacySelections.category || '기본');
+        setSelectedItems(result.privacySelections.items || []);
+      }
+    });
+  }, []);
+
 
   const handleCheckboxChange = (item) => {
     setSelectedItems(prev =>
@@ -23,9 +32,33 @@ export default function SettingAddPrivacy() {
     );
   };
 
+  // const handleSave = () => {
+  //   alert(`선택된 항목: ${selectedItems.join(', ')}`);
+  // };
+//   const handleSave = () => {
+//   const saveData = {
+//     category: selectedCategory,
+//     items: selectedItems
+//   };
+
+//   chrome.storage.local.set({ privacySelections: saveData }, () => {
+//     console.log('✅ 저장됨:', saveData);
+//     alert(`선택된 항목이 저장되었습니다: ${selectedItems.join(', ')}`);
+//   });
+// };
   const handleSave = () => {
-    alert(`선택된 항목: ${selectedItems.join(', ')}`);
+  const saveData = {
+    category: selectedCategory,
+    items: selectedItems,
   };
+
+  chrome.storage.local.set({ privacySelections: saveData }, () => {
+    console.log('✅ 저장됨:', saveData);
+    alert(`선택된 항목이 저장되었습니다: ${selectedItems.join(', ')}`);
+  });
+};
+
+
 
   return (
     <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
@@ -58,7 +91,7 @@ export default function SettingAddPrivacy() {
       {selectedCategory === '기본' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3 grid grid-cols-2 gap-x-4">
           {[
-            '성명', '생년월일', '이메일 주소', '주소', '카드 번호', '생체 정보', '휴대폰 번호', '성별','주민등록번호', '위치 정보', '계좌 번호', '출생지'
+            '이름', '생년월일', '이메일', '주소', '카드 번호', '생체 정보', '휴대폰 번호', '성별','주민등록번호', '위치 정보', '계좌 번호', '출생지'
           ].map(item => (
             <label key={item} className="flex items-center mb-2">
               <input
@@ -115,45 +148,7 @@ export default function SettingAddPrivacy() {
       {/* 신체적 정보 및 정신적 정보 항목 렌더링 */}
       {selectedCategory === '신체정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목
-          {(customInputs[selectedCategory] || []).map(item => (
-            <label key={item} className="inline-flex items-center mr-4 mb-1">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedItems.includes(item)}
-                onChange={() => handleCheckboxChange(item)}
-              />
-              {item}
-            </label>
-          ))}
-          <button
-            className="text-blue-500 text-sm hover:underline"
-            onClick={() => setInputVisible(true)}
-          >
-            ＋ 수집 항목 추가
-          </button> */}
-
-          {/* 입력창: visible 상태일 때만 표시
-          {inputVisible && (
-            <input
-              type="text"
-              className="border px-2 py-1 text-sm rounded w-full mt-1 mb-2"
-              placeholder="항목 입력 후 Enter"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentInput.trim()) {
-                  setCustomInputs(prev => ({
-                    ...prev,
-                    [selectedCategory]: [...(prev[selectedCategory] || []), currentInput.trim()]
-                  }));
-                  setCurrentInput('');
-                  setInputVisible(false);
-                }
-              }}
-            />
-          )} */}
+          {/* ✅ 사용자 추가 항목*/}
           <h3 className="font-semibold mb-1">의료·건강 정보</h3>
           {['건강상태', '진료기록', '병력', '신체장애', '장애등급'].map(item => (
             <label key={item} className="block mb-1">
@@ -202,45 +197,7 @@ export default function SettingAddPrivacy() {
       {/* 사회적 정보 항목 렌더링 */}
       {selectedCategory === '인적사항' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목
-          {(customInputs[selectedCategory] || []).map(item => (
-            <label key={item} className="inline-flex items-center mr-4 mb-1">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedItems.includes(item)}
-                onChange={() => handleCheckboxChange(item)}
-              />
-              {item}
-            </label>
-          ))}
-          <button
-            className="text-blue-500 text-sm hover:underline"
-            onClick={() => setInputVisible(true)}
-          >
-            ＋ 수집 항목 추가
-          </button> */}
-
-          {/* 입력창: visible 상태일 때만 표시
-          {inputVisible && (
-            <input
-              type="text"
-              className="border px-2 py-1 text-sm rounded w-full mt-1 mb-2"
-              placeholder="항목 입력 후 Enter"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentInput.trim()) {
-                  setCustomInputs(prev => ({
-                    ...prev,
-                    [selectedCategory]: [...(prev[selectedCategory] || []), currentInput.trim()]
-                  }));
-                  setCurrentInput('');
-                  setInputVisible(false);
-                }
-              }}
-            />
-          )} */}
+          {/* ✅ 사용자 추가 항목 */}
           <h3 className="font-semibold mb-1">가족 정보</h3>
           {['가족관계 및 가족구성원 정보', '법정대리인정보'].map(item => (
             <label key={item} className="block mb-1">
@@ -275,45 +232,7 @@ export default function SettingAddPrivacy() {
       {selectedCategory === '사회정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
           {/* 교육 정보 */}
-          {/* ✅ 사용자 추가 항목
-          {(customInputs[selectedCategory] || []).map(item => (
-            <label key={item} className="inline-flex items-center mr-4 mb-1">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedItems.includes(item)}
-                onChange={() => handleCheckboxChange(item)}
-              />
-              {item}
-            </label>
-          ))}
-          <button
-            className="text-blue-500 text-sm hover:underline"
-            onClick={() => setInputVisible(true)}
-          >
-            ＋ 수집 항목 추가
-          </button> */}
-
-          {/* 입력창: visible 상태일 때만 표시
-          {inputVisible && (
-            <input
-              type="text"
-              className="border px-2 py-1 text-sm rounded w-full mt-1 mb-2"
-              placeholder="항목 입력 후 Enter"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentInput.trim()) {
-                  setCustomInputs(prev => ({
-                    ...prev,
-                    [selectedCategory]: [...(prev[selectedCategory] || []), currentInput.trim()]
-                  }));
-                  setCurrentInput('');
-                  setInputVisible(false);
-                }
-              }}
-            />
-          )} */}
+          {/* ✅ 사용자 추가 항목*/}
           <h3 className="font-semibold mb-1">교육 정보</h3>
           {['학력', '성적', '기술 자격증 및 전문 면허증 보유 내역'].map(item => (
             <label key={item} className="block mb-1">
@@ -377,45 +296,7 @@ export default function SettingAddPrivacy() {
 
       {selectedCategory === '재산정보' && (
         <div className="border rounded-lg p-3 h-40 overflow-y-auto text-sm mb-3">
-          {/* ✅ 사용자 추가 항목
-          {(customInputs[selectedCategory] || []).map(item => (
-            <label key={item} className="inline-flex items-center mr-4 mb-1">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedItems.includes(item)}
-                onChange={() => handleCheckboxChange(item)}
-              />
-              {item}
-            </label>
-          ))}
-          <button
-            className="text-blue-500 text-sm hover:underline"
-            onClick={() => setInputVisible(true)}
-          >
-            ＋ 수집 항목 추가
-          </button> */}
-
-          {/* 입력창: visible 상태일 때만 표시
-          {inputVisible && (
-            <input
-              type="text"
-              className="border px-2 py-1 text-sm rounded w-full mt-1 mb-2"
-              placeholder="항목 입력 후 Enter"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && currentInput.trim()) {
-                  setCustomInputs(prev => ({
-                    ...prev,
-                    [selectedCategory]: [...(prev[selectedCategory] || []), currentInput.trim()]
-                  }));
-                  setCurrentInput('');
-                  setInputVisible(false);
-                }
-              }}
-            />
-          )} */}
+          {/* ✅ 사용자 추가 항목 */}
           {/* 소득 정보 */}
           <h3 className="font-semibold mb-1">소득 정보</h3>
           {['봉급액', '이자소득', '사업소득'].map(item => (
@@ -477,8 +358,6 @@ export default function SettingAddPrivacy() {
           {/* <button className="text-blue-500 text-sm hover:underline">＋ 수집 항목 추가</button> */}
         </div>
       )}
-
-
 
       {/* 저장 버튼 */}
       <button

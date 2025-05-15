@@ -16,12 +16,16 @@ export const getSummarize = async(input_data, split) => {
         summaryId: 'abc123',
         summaryItems: [
             {
-            category: 'collection-purpose',
-            summary_content: '회사는 서비스 제공을 위해 최소한의 개인정보를 수집하며, 수집된 정보는 맞춤형 서비스 제공 목적으로 활용됩니다.',
+            category: '개인정보 처리 목적',
+            summary_content: '회사는 회원관리, 민원처리, 서비스 제공, 마케팅, 부정이용 방지를 위해 개인정보를 처리합니다.',
             },
             {
-            category: 'third-party',
-            summary_content: '회사는 고객 동의를 받아 개인정보를 제3자에게 제공하며, 제공받는 자, 제공 항목, 이용 목적 등을 명확히 고지합니다.',
+            category: '처리하는 개인정보 항목',
+            summary_content: '회사는 회원가입 시 이메일, 비밀번호, 이름, 국가명, 의료기관 정보 등을 수집하며, 결제 시 신용카드 및 계좌정보, 이름, 전화번호, 이메일, CI/DI, 빌링 키(정기결제 시) 등을 수집합니다. 서비스 이용 시 IP주소, 쿠키, 브라우저 정보, 이용기록, 방문기록, 디바이스 및 OS 정보, 앱 설치일 등을 수집합니다.',
+            },
+            {
+            category: '개인정보 국외 이전',
+            summary_content: '개인정보는 Amplitude, Inc, MOLOCO, Inc., Braze,Inc.등 해외 업체로 이전되며, 회원 탈퇴 시까지 보유합니다.'
             }
         ]
         };

@@ -12,12 +12,13 @@ import Loading from '../components/Loading';
 
 export default function ResultPage() {
     const navigate = useNavigate();
-
     const [htmlSource, getHtmlSource] = useState("");
     const [summaryId, setSummaryId] = useState("");
     const [summaryItems, setSummaryItems] = useState([]);
     const [unfairId, setUnfairId] = useState("");
     const [unfairItems, setUnfairItems] = useState([]);
+    const [userPrivacyItems, setUserPrivacyItems] = useState([]);
+
 
     useEffect(() => { //html 데이터 불러오는 부분
         // 현재 탭에 메시지 보내기
@@ -76,6 +77,26 @@ export default function ResultPage() {
     }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
 
 
+    useEffect(() => {
+    chrome.storage.local.get(['privacySelections'], (result) => {
+        if (result.privacySelections?.items) {
+        setUserPrivacyItems(result.privacySelections.items);
+        }
+    });
+    }, []);
+
+    function highlightMatchedTerms(text, terms) {
+    if (!terms || terms.length === 0) return text;
+
+    const pattern = new RegExp(`(${terms.join('|')})`, 'gi');
+    const parts = text.split(pattern);
+
+    return parts.map((part, idx) =>
+        terms.includes(part) ? <strong key={idx}>{part}</strong> : part
+    );
+    }
+
+
     return (
         <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
             <h2 className="text-center text-xl font-bold mb-2">PRIBUNNY</h2>
@@ -125,20 +146,45 @@ export default function ResultPage() {
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-sm font-semibold">요약</span>
                         </div>
-
                         {/* 요약 출력 영역 */}
                         <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm whitespace-pre-wrap text-left">
                             <br />
 
-                            {summaryItems.map((item, idx) => (
+                            {/* {summaryItems.map((item, idx) => (
                             <div key={idx} className="mb-3">
                                 <strong>{item.category}</strong><br />
                                 {item.summary_content}
                             </div>
-                        ))}
+                        ))} */}
+                            {summaryItems.map((item, idx) => (
+                            <div key={idx} className="mb-3">
+                                <strong>{item.category}</strong><br />
+                                {item.category === '처리하는 개인정보 항목'
+                                ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
+                                : item.summary_content}
+                            </div>
+                            ))}
                         </div>
                     </>
                 )}
         </div>
     );
+
+//         {/* {summaryItems.map((item, idx) => (
+//           <div key={idx} className="mb-3">
+//             <strong>{item.category}</strong><br />
+//             {highlightMatchedTerms(item.summary_content, userPrivacyItems)}
+//           </div>
+//         ))} */}
+//         {summaryItems.map((item, idx) => (
+//           <div key={idx} className="mb-3">
+//             <strong>{item.category}</strong><br />
+//             {item.category === '처리하는 개인정보 항목'
+//               ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
+//               : item.summary_content}
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
 }
