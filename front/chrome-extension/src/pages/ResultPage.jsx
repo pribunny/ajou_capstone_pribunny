@@ -288,7 +288,7 @@ export default function ResultPage() {
                 .map((item, idx) => (
                 <div key={idx} className="mb-3">
                     <strong>{item.category}</strong><br />
-                    {item.category === '처리하는 개인정보 항목'
+                    {item.category === '처리하는 개인정보의 항목'
                     ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
                     : item.summary_content}
                 </div>

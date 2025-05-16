@@ -46,11 +46,11 @@ document.addEventListener('mouseup', (e) => {
             button.style.top = `${e.clientY}px`;
             button.style.left = `${e.clientX}px`; // 마우스 이시키 디질라고 너 다시 보자.
             button.style.zIndex = '999999';
-            button.style.width = '16px';   // 적절한 크기 조절
-            button.style.height = '16px';
+            button.style.width = '25px';   // 적절한 크기 조절
+            button.style.height = '25px';
             button.style.cursor = 'pointer';
             button.style.borderRadius = '6px';
-            button.style.boxShadow = '0 0 4px rgba(0,0,0,0.2)';
+            button.style.boxShadow = '0 0 6px rgba(0,0,0,0.2)';
             button.style.background = '#fff';
             button.style.padding = '4px';
 
