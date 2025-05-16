@@ -29,6 +29,11 @@ app.use("/api", indexRoutes);
 const summarizeRoutes = require("./routes/summarize")
 app.use("/api/summary", summarizeRoutes);
 
+
+// 추출 라우터
+const extractRoutes = require("./routes/extract")
+app.use("/api/extract", extractRoutes);
+
 // 서버 실행
 https.createServer(sslOptions, app).listen(PORT, () => {
     console.log(`🔒 HTTPS server running at https://localhost:${PORT}`);
