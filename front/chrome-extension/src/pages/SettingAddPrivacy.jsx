@@ -9,7 +9,6 @@ export default function SettingAddPrivacy() {
 
   const [selectedCategory, setSelectedCategory] = useState('기본');
   const [selectedItems, setSelectedItems] = useState([]);
-
   const [customInputs, setCustomInputs] = useState({});
   const [currentInput, setCurrentInput] = useState('');
   const [inputVisible, setInputVisible] = useState(false);
@@ -51,14 +50,11 @@ export default function SettingAddPrivacy() {
     category: selectedCategory,
     items: selectedItems,
   };
-
   chrome.storage.local.set({ privacySelections: saveData }, () => {
     console.log('✅ 저장됨:', saveData);
     alert(`선택된 항목이 저장되었습니다: ${selectedItems.join(', ')}`);
   });
 };
-
-
 
   return (
     <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
