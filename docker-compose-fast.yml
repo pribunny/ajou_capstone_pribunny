@@ -9,6 +9,6 @@ services:
     volumes:
       - ./app/ML:/app
     env_file:
-      - ./app/ML/.env.dev
+      - ./app/ML/.env.prod
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped

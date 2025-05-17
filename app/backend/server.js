@@ -10,6 +10,7 @@ require("dotenv").config({ path: envFile });
 
 const app = express();
 const PORT = process.env.API_PORT || 3000;
+const HOST = process.env.HOST || "localhost"
 
 // 인증서 경로
 const sslOptions = {
@@ -34,18 +35,7 @@ app.use("/api", summarizeRoutes);
 const extractRoutes = require("./routes/extract")
 app.use("/api/extract", extractRoutes);
 
-// 환경에 따라 서버 실행 방식 분기
-if (process.env.NODE_ENV === "production") {
-    const sslOptions = {
-        key: fs.readFileSync(process.env.PRIVATE_KEY_PATH),
-        cert: fs.readFileSync(process.env.PUBLIC_KEY_PATH)
-    };
-
-    https.createServer(sslOptions, app).listen(PORT, () => {
-        console.log(`🔒 [PROD] HTTPS server running at https://localhost:${PORT}`);
-    });
-} else {
-    http.createServer(app).listen(PORT, () => {
-        console.log(`🌱 [DEV] HTTP server running at http://localhost:${PORT}`);
-    });
-}
+// prod/dev 모두 HTTP 서버 실행
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 [${process.env.NODE_ENV.toUpperCase()}] HTTP server running at http://${HOST}:${PORT}`);
+});
