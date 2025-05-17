@@ -12,12 +12,6 @@ const app = express();
 const PORT = process.env.API_PORT || 3000;
 const HOST = process.env.HOST || "localhost"
 
-// 인증서 경로
-const sslOptions = {
-    key: fs.readFileSync(process.env.PRIVATE_KEY_PATH),
-    cert: fs.readFileSync(process.env.PUBLIC_KEY_PATH)
-};
-
 // 미들웨어
 app.use(cors());
 app.use(express.json());
