@@ -1,0 +1,14 @@
+services:
+
+  backend-ml:
+    build:
+      context: ./app/ML
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app/ML:/app
+    env_file:
+      - ./app/ML/.env.dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
