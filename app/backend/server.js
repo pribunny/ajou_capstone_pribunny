@@ -16,6 +16,11 @@ const HOST = process.env.HOST || "localhost"
 app.use(cors());
 app.use(express.json());
 
+// 헬스 체크 라우터 (ALB 상태 확인용)
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
+
 // 라우터
 const indexRoutes = require("./routes/index");
 app.use("/api", indexRoutes);
@@ -24,12 +29,11 @@ app.use("/api", indexRoutes);
 const summarizeRoutes = require("./routes/summarize")
 app.use("/api", summarizeRoutes);
 
-
 // 추출 라우터
 const extractRoutes = require("./routes/extract")
 app.use("/api/extract", extractRoutes);
 
 // prod/dev 모두 HTTP 서버 실행
 app.listen(PORT, HOST, () => {
-    console.log(`🚀 [${process.env.NODE_ENV.toUpperCase()}] HTTP server running at http://${HOST}:${PORT}`);
+    console.log(`🚀 HTTP server running at http://${HOST}:${PORT}`);
 });
