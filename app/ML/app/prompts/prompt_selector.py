@@ -43,7 +43,7 @@ PROMPT_DET_MAP = {
     "sensitiveInfoDisclosure": unfair_detect_sensitive_info_template,
     "pseudonymizedInfo": unfair_detect_pseudonymized_info_template, # 추가
     "autoCollectionDevices": unfair_detect_auto_collection_template,
-    "behavioralTrakingByThirdParties": unfair_detect_behavior_tracking_template,
+    "behavioralTrackingByThirdParties": unfair_detect_behavior_tracking_template,
     "dataSubjectRights": unfair_detect_rights_and_methods_template,
     "privacyOfficerInfo": unfair_detect_privacy_officer_template,
     "domesticAgent": unfair_detect_domestic_agent_template, # 추가
@@ -51,7 +51,7 @@ PROMPT_DET_MAP = {
     "fixedCCTVOperation": unfair_detect_fixed_cctv_template, # 추가
     "mobileCCTVOperation": unfair_detect_mobile_cctv_template, # 추가
     "optionalPrivacyClauses": unfair_detect_optional_clauses_template, # 추가
-    "policychanges": unfair_detect_policy_changes_template,
+    "policyChanges": unfair_detect_policy_changes_template,
 }
 
 def get_detect_prompt(category: str):

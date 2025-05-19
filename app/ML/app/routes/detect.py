@@ -4,7 +4,6 @@ from typing import List, TypeVar, Dict, Any
 from collections import defaultdict
 from fastapi import APIRouter, HTTPException
 
-from app.prompts.unfair_clause_prompt import unfair_detect_template
 from app.routes.base import BaseResponse, make_base_response
 from app.utils.category_classification import TextBatch, get_category_classify
 from app.utils.json_parser import extract_json_from_response

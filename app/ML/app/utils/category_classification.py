@@ -8,7 +8,7 @@ class TextBatch(BaseModel):
 
 model = SentenceTransformer("jhgan/ko-sbert-sts")
 
-connections.connect(alias="default", host="localhost", port="19530")
+connections.connect(alias="default", host="10.0.3.241", port="19530")
 collection = Collection("category_embeddings")
 collection.load()
 
