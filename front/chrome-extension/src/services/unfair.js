@@ -77,9 +77,12 @@ export const getUnfairDetect = async (input_data, split) => {
   }
   try{
       const response = await apiClient.post('/api/unfair',
-      {input_data}, 
+      {
+        detectText : input_data.html,
+        checkText : input_data.text
+      },
       {params : { data_size: split }}
-  );
+    );
       if(response?.status === 200) return response.data.data;
   }catch(err){
       if(err.response?.status === 400){

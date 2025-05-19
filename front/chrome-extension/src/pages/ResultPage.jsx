@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
@@ -50,8 +49,15 @@ export default function ResultPage() {
              return;
         }
 
-        const cleanHTML = DOMPurify.sanitize(htmlSource); // 데이터를 한 번 정제해서 보낸다.
+        const cleanHTML = DOMPurify.sanitize(htmlSource.html); // 데이터를 한 번 정제해서 보낸다. + 수정함
         console.log('정제된 데이터 : ', cleanHTML);
+        const cleanText = DOMPurify.sanitize(htmlSource.text); //추가함
+        console.log('정제된 데이터 : ', cleanText); //추가함
+
+        const cleanData = { //추가함
+            html : cleanHTML,
+            text : cleanText
+        };
 
         // const loadSummary = async () => {
         //     try {
@@ -66,7 +72,7 @@ export default function ResultPage() {
         // };
         const loadSummary = async () => {
             try {
-                const data = await getSummarize(cleanHTML, 'long');
+                const data = await getSummarize(cleanData, 'long'); //수정
                 setSummaryId(data.summaryId);
                 setSummaryItems(data.summaryItems);
             } catch (error) {
@@ -95,7 +101,7 @@ export default function ResultPage() {
 
         const loadUnfair = async () => {
         try {
-            const data = await getUnfairDetect(cleanHTML, 'long');
+            const data = await getUnfairDetect(cleanData, 'long'); //수정
             setUnfairId(data.unfairId);
             setUnfairItems(data.unfairItems);
         } catch (error) {

@@ -40,7 +40,10 @@ export const getSummarize = async (input_data, split) => {
     const response = await apiClient.post(
       '/api/summary',
     // '/api/summary-error',
-      { input_data },
+      {
+        summaryText : input_data.html,
+        checkText : input_data.text
+      },
       { params: { data_size: split } }
     );
     if (response?.status === 200) return response.data.data;
