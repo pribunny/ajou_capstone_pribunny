@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'; // ✅ 이거 반드시 있어야
 import { MemoryRouter } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
-import MainImg from '../assets/main_bunny.jpg';
+import MainImg from '../assets/main_bunny.png';
 import App from '../App'; // 이 App에 모든 Route가 정의되어 있음
 
 const root = createRoot(document.getElementById('root'));
@@ -28,7 +28,7 @@ export default function Popup() {
                 </button>
             </div>
             <div className ="flex-1 flex flex-col justify-center">
-                <img className = "w-[230px] h-[220px] mx-auto" src = {MainImg} alt="Pribunny"/>
+                <img className = "w-[230px] h-auto mx-auto" src = {MainImg} alt="Pribunny"/>
                 <div className="text-center text-sm mb-2 font-serif">
                     <p>우리의 똑똑한 토끼가 탐색을 도와줄거예요.</p>
                     <p>개인정보처리방침, 수집이용동의서 내용 확인하기</p>

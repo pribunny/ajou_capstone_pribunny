@@ -53,28 +53,61 @@ export default function ResultPage() {
         const cleanHTML = DOMPurify.sanitize(htmlSource); // 데이터를 한 번 정제해서 보낸다.
         console.log('정제된 데이터 : ', cleanHTML);
 
+        // const loadSummary = async () => {
+        //     try {
+        //         const data = await getSummarize(cleanHTML, 'long');
+        //         console.log(data.summaryItems);
+        //         setSummaryId(data.summaryId);
+        //         setSummaryItems(data.summaryItems);
+        //     } catch (error) {
+        //         // 에러 핸들링 -> 에러 코드를 출력하면 됨.
+        //         console.error('요약실패', error);
+        //     }
+        // };
         const loadSummary = async () => {
             try {
                 const data = await getSummarize(cleanHTML, 'long');
-                console.log(data.summaryItems);
                 setSummaryId(data.summaryId);
                 setSummaryItems(data.summaryItems);
             } catch (error) {
-                // 에러 핸들링 -> 에러 코드를 출력하면 됨.
                 console.error('요약실패', error);
+                navigate('/error', {
+                state: {
+                    source: '요약 처리',
+                    code: error.code || 'UNKNOWN',
+                    message: error.message || '알 수 없는 에러가 발생했습니다.'
+                }
+                });
             }
-        };
+            };
+
+        // const loadUnfair = async () => {
+        //     try {
+        //         const data = await getUnfairDetect(cleanHTML, 'long');
+        //         console.log(data.unfairItems);
+        //         setUnfairId(data.unfairId);
+        //         setUnfairItems(data.unfairItems);
+        //     } catch (error) {
+        //         // 에러 핸들링 -> 에러 코드를 출력하면 됨.
+        //         console.error('불공정약관탐지실패', error);
+        //     }
+        // };
 
         const loadUnfair = async () => {
-            try {
-                const data = await getUnfairDetect(cleanHTML, 'long');
-                console.log(data.unfairItems);
-                setUnfairId(data.unfairId);
-                setUnfairItems(data.unfairItems);
-            } catch (error) {
-                // 에러 핸들링 -> 에러 코드를 출력하면 됨.
-                console.error('불공정약관탐지실패', error);
+        try {
+            const data = await getUnfairDetect(cleanHTML, 'long');
+            setUnfairId(data.unfairId);
+            setUnfairItems(data.unfairItems);
+        } catch (error) {
+            console.error('불공정약관탐지실패', error);
+            navigate('/error', {
+            state: {
+                source: '불공정약관 탐지',
+                code: error.code || 'UNKNOWN',
+                message: error.message || '알 수 없는 에러가 발생했습니다.'
             }
+            });
+        }
         };
 
         loadSummary();
