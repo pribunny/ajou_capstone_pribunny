@@ -5,7 +5,7 @@ from langchain_core.vectorstores import VectorStoreRetriever
 
 def get_milvus_retriever(
         collection_name: str = "legal_documents_lib",
-        host: str = "localhost",
+        host: str = "10.0.3.241",
         port: str = "19530"
 ) -> VectorStoreRetriever:
     embedding_model = HuggingFaceEmbeddings(
