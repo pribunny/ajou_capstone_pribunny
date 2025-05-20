@@ -60,24 +60,8 @@ const summarizeController = async (req, res) => {
         const markdownText = htmlToMarkdown(sanitizedHtml);
         //console.log('📄 변환된 Markdown:', markdownText);  // ✅ 추가된 로그
         paragraphs = splitParagraphs(markdownText);
-        // 병합 및 정제
-        paragraphs = [];
-        let currentSection = '';
-
-        for (let line of rawParagraphs) {
-          line = line.trim();
-          if (!line) continue;
-
-          if (/^##?\s*\d*\.*\s*/.test(line)) {
-            if (currentSection) paragraphs.push(currentSection.trim());
-            currentSection = line;
-          } else {
-            currentSection += '\n' + line;
-          }
-        }
-
-        if (currentSection) paragraphs.push(currentSection.trim());
-      }
+    
+      } 
       else if (data_size === 'short') {
         paragraphs = [sanitizedHtml];
       } else {
@@ -112,10 +96,7 @@ const summarizeController = async (req, res) => {
       modelResponse = await axios.post(
         `http://${modelServerUrl}/llm/summaries`,
 
-        {
-          documentId,
-          contexts: paragraphs
-        },
+        
         { headers: { 'Content-Type': 'application/json' } }
       );
       console.log('\n✅ 📥 모델 응답 수신 완료');
