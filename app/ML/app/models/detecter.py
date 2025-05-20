@@ -2,9 +2,7 @@ from langchain_core.runnables import Runnable, RunnableSequence
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain.prompts import PromptTemplate
 
-from app.prompts.unfair_clause_prompt import unfair_detect_template
 from app.models.base_rag import get_default_llm
-from app.utils.logger import logger
 
 
 class DetectChain:

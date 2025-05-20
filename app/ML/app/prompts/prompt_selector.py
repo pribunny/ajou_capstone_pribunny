@@ -27,7 +27,7 @@ PROMPT_SUM_MAP = {
 }
 
 def get_summary_detect(category: str):
-    return PROMPT_SUM_MAP.get(category, sp.summary_template)
+    return PROMPT_SUM_MAP.get(category)
 
 PROMPT_DET_MAP = {
     "processingPurpose": unfair_detect_purpose_template,
