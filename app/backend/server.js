@@ -27,7 +27,7 @@ app.use("/api", indexRoutes);
 
 // 요약 라우터
 const summarizeRoutes = require("./routes/summarize")
-app.use("/api", summarizeRoutes);
+app.use("/api/summary", summarizeRoutes);
 
 
 // 추출 라우터
