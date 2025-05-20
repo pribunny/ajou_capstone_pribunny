@@ -4,6 +4,8 @@ const Tesseract = require('tesseract.js');
 const convertToMarkdown = require('../utils/convertToMarkdown');
 const https = require('https');
 
+const modelServerUrl = process.env.MODEL_SERVER_IP
+
 const extractController = async (req, res) => {
   try {
     const { filePath } = req.body;
@@ -17,7 +19,7 @@ const extractController = async (req, res) => {
     let markdown = '';
 
     if (ext === '.pdf') {
-      const modelServerUrl = 'http://10.0.3.118:8000/extract-text';
+      const modelServerUrl = `http://${MODEL_SERVER_IP}:8000/extract-text`;
       const modelResponse = await axios.post(modelServerUrl, { filePath });
 
       if (!modelResponse.data.success) {
