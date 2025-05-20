@@ -93,7 +93,7 @@ const summarizeController = async (req, res) => {
       //console.log('contexts 타입 확인:', Array.isArray(paragraphs));  // ✅ true이면 리스트
       
       modelResponse = await axios.post(
-        `http://${modelServerUrl}/llm/summaries`,
+        `http://ml-test-249570354.ap-northeast-2.elb.amazonaws.com/llm/summaries`,
 
         {
           documentId,
