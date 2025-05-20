@@ -86,14 +86,16 @@ const summarizeController = async (req, res) => {
     // ✅ 3. summary 모델 요청
     let modelResponse;
     try {
-      // console.log('📤 summary 모델에 보낼 요청 데이터:', {
-      //   documentId,
-      //   contexts: paragraphs
-      // }); // ✅ 추가된 로그
-      //console.log('contexts 타입 확인:', Array.isArray(paragraphs));  // ✅ true이면 리스트
+      console.log('\n====== 📤 Summary 모델 요청 시작 ======');
+      console.log('📌 documentId:', documentId);
+      console.log('📌 contexts (paragraphs):', paragraphs);
+      console.log('📌 typeof paragraphs:', typeof paragraphs);
+      console.log('📌 isArray:', Array.isArray(paragraphs));
+      console.log('📌 contexts.length:', paragraphs?.length);
+
       
       modelResponse = await axios.post(
-        `http://ml-test-249570354.ap-northeast-2.elb.amazonaws.com/llm/summaries`,
+        `http://ml-test-249570354.ap-northeast-2.elb.amazonaws.com/llm/summaries/`,
 
         {
           documentId,
@@ -101,8 +103,14 @@ const summarizeController = async (req, res) => {
         },
         { headers: { 'Content-Type': 'application/json' } }
       );
+      console.log('\n✅ 📥 모델 응답 수신 완료');
+      console.log('🧾 전체 응답:', modelResponse.data); 
     } catch (error) {
-      console.error('summary 모델 요청 실패:', error.message);
+      console.error('\n❌ summary 모델 요청 실패:', error.message);
+      if (error.response) {
+        console.error('📛 응답 상태 코드:', error.response.status);
+        console.error('📛 응답 내용:', error.response.data);
+      }
       return res.status(502).json({
         success: false,
         code: 'MODEL_SERVER_ERROR',
@@ -114,6 +122,7 @@ const summarizeController = async (req, res) => {
     // ✅ 4. 후처리
     const responseData = modelResponse.data?.data;
     if (!responseData || !Array.isArray(responseData.results)) {
+      console.warn('⚠️ 모델 응답의 results가 올바르지 않음:', responseData?.results);
       return res.status(500).json({
         success: false,
         code: 'INVALID_MODEL_RESPONSE',
