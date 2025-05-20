@@ -5,6 +5,6 @@ const router = express.Router();
 const summarizeText = require("../controllers/summarizeController");
 
 // 요약 API 경로
-router.post('/summary', summarizeText);
+router.post("/", summarizeText);
 
 module.exports = router;

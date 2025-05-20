@@ -1,7 +1,7 @@
 const { JSDOM } = require("jsdom");
 const TurndownService = require("turndown");
 
-// 개인정보 처리방침에서 추출하고자 하는 섹션 패턴 목록 (정규식)
+// 개인정보 처리방침 관련 주요 섹션명 패턴 리스트
 const TARGET_SECTIONS = [
   '개인정보.*처리.?목적',
   '개인정보.*보유.?기간',
@@ -24,168 +24,453 @@ const TARGET_SECTIONS = [
   '개인정보.*보호수준',
 ];
 
-// 주어진 텍스트가 대상 섹션 제목에 해당하는지 여부를 확인하는 함수
 const isTargetSection = (text) => {
-  for (const pattern of TARGET_SECTIONS) {
-    const regex = new RegExp(pattern);
-    if (regex.test(text)) return true;
+  return TARGET_SECTIONS.some(pattern => new RegExp(pattern).test(text));
+};
+
+// 텍스트 중복 체크용 정규화 함수
+const normalizeTextForDuplicateCheck = (text) => {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .replace(/\*\*/g, '')                     // 마크다운 볼드(**) 제거
+    .replace(/[_~`>#+\-\[\]\(\)!]/g, '')     // 마크다운 특수문자 제거
+    .replace(/\s+/g, ' ')                     // 공백 여러 개를 한 칸으로
+    .trim();
+};
+
+// 중심노드 중복 판단
+const isDuplicateCenterNode = (node, existingNodes) => {
+  const nodeLevel = parseInt(node.tagName.replace('H', ''), 10);
+  const nodeNormalizedText = normalizeTextForDuplicateCheck(node.textContent.trim());
+
+  for (const existNode of existingNodes) {
+    const existLevel = parseInt(existNode.tagName.replace('H', ''), 10);
+    const existNormalizedText = normalizeTextForDuplicateCheck(existNode.textContent.trim());
+
+    if (nodeLevel === existLevel && nodeNormalizedText === existNormalizedText) {
+      return true;
+    }
   }
   return false;
 };
 
-// 개별 노드를 마크다운으로 변환하는 함수
-const processNode = (node, processedNodes, turndownService) => {
-  if (!node || processedNodes.has(node)) return ''; // 이미 처리한 노드는 건너뜀
+// 중심노드 다음 나올 때까지 노드 수집 (DFS, 중심 노드 기준)
+const collectUntilNextCenter = (startNode, centerNodesSet, processedNodes) => {
+  const collected = new Set();
+  let shouldStop = false;
+
+  const dfs = (node) => {
+    if (!node || collected.has(node) || processedNodes.has(node) || shouldStop) return;
+    if (centerNodesSet.has(node) && node !== startNode) {
+      shouldStop = true;
+      return;
+    }
+
+    collected.add(node);
+
+    // 자식 노드 순회
+    for (const child of node.childNodes || []) {
+      dfs(child);
+      if (shouldStop) return;
+    }
+  };
+
+  // startNode 자식부터 DFS 수행
+  for (const child of startNode.childNodes || []) {
+    dfs(child);
+    if (shouldStop) break;
+  }
+
+  // 이후 형제 노드들도 포함
+  let sibling = startNode.nextElementSibling;
+  while (sibling && !shouldStop) {
+    dfs(sibling);
+    sibling = sibling.nextElementSibling;
+  }
+
+  // 상위 부모의 다음 형제 노드들 포함 (상위 레벨 포함해서 수집)
+  let parent = startNode.parentElement;
+  while (parent && !shouldStop) {
+    let pSibling = parent.nextElementSibling;
+    while (pSibling && !shouldStop) {
+      dfs(pSibling);
+      pSibling = pSibling.nextElementSibling;
+    }
+    parent = parent.parentElement;
+  }
+
+  return collected;
+};
+
+// 중복 방지 + 부모가 처리된 텍스트 포함 고려하여 마크다운 변환
+const convertNodeToMarkdown = (node, turndownService, processedNodes, processedTexts) => {
+  if (!node || processedNodes.has(node)) return '';
+
+  // ❗️elementor 주석 또는 해당 문자열 포함된 노드 무시
+  if (
+    node.nodeType === 8 && node.data.includes('elementor') || // 주석 노드
+    node.textContent?.includes('*! elementor -') ||           // 텍스트 내 포함
+    node.outerHTML?.includes('*! elementor -')                // HTML 내 포함
+  ) {
+    return '';
+  }
+
+  // undefined 태그명 노드는 무시
+  if (!node.tagName) return '';
+
+  // 부모 노드에 이미 포함된 텍스트라면 중복 방지
+  // (부모 노드 텍스트와 비교해 중복 여부 체크)
+  let parent = node.parentElement;
+  while (parent) {
+    if (processedNodes.has(parent)) {
+      const parentTextNorm = normalizeTextForDuplicateCheck(parent.textContent.trim());
+      const nodeTextNorm = normalizeTextForDuplicateCheck(node.textContent.trim());
+      if (parentTextNorm.includes(nodeTextNorm)) {
+        return '';  // 부모가 이미 처리한 텍스트라 중복 방지
+      }
+    }
+    parent = parent.parentElement;
+  }
+
+  // 텍스트 정규화하여 중복 체크
+  const textNormalized = normalizeTextForDuplicateCheck(node.textContent.trim());
+  if (processedTexts.has(textNormalized)) {
+    return '';
+  }
+
   processedNodes.add(node);
+  processedTexts.add(textNormalized);
 
-  let md = '';
+  const tag = node.tagName.toUpperCase();
 
-  // 제목 태그(H1~H6, STRONG, B)를 처리
-  if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'STRONG', 'B'].includes(node.tagName)) {
-    const level = parseInt(node.tagName.replace(/[^\d]/g, ''), 10) || 4; // STRONG, B는 4단계 제목으로 처리
-    md += `\n\n${'#'.repeat(level)} ${node.textContent.trim()}\n`;
-  } 
-  // 목록, 문단, DIV 태그는 Turndown으로 변환
-  else if (node.tagName === 'LI' || node.tagName === 'P' || node.tagName === 'DIV') {
+  if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'STRONG', 'B'].includes(tag)) {
+    const level = parseInt(tag.replace(/[^\d]/g, ''), 10) || 4;
+    return `\n\n${'#'.repeat(level)} ${node.textContent.trim()}\n`;
+  } else {
+    // <p> 태그 유지 + 텍스트 포함, turndown 처리
     const html = node.outerHTML || `<p>${node.textContent.trim()}</p>`;
-    md += `\n${turndownService.turndown(html)}\n`;
-  } 
-  // 기타 태그는 예외처리 포함해 Turndown 변환
-  else {
-    try {
-      const html = node.outerHTML || `<p>${node.textContent.trim()}</p>`;
-      md += `\n${turndownService.turndown(html)}\n`;
-    } catch (e) {
-      console.warn('⚠️ Turndown 오류:', e.message);
+    return `\n${turndownService.turndown(html)}\n`;
+  }
+};
+// 사이트별 제외 규칙
+const excludedMapBySite = {
+  default: new Map([
+    ['H3', ['개인정보 처리방침']]
+  ]),
+  naver: new Map([
+    ['H3', ['네이버에서만 제공하는 특별한 개인정보처리방침', '네이버 개인정보처리방침']],
+    ['H5', ['수집하는 항목', '수집 목적']],
+  ]),
+  seoul: new Map([
+    ['H3', ['개인정보 처리방침']],
+    ['H4', ['서울시 개인정보 처리방침 쉽게 알기', '공유하기 레이어']],
+    ['H5', ['개인정보란?', '여러분의 개인정보는 수집 → 이용 → 위탁/제공 → 파기 단계로 관리되고 있어요.', '수집', '이용', '위탁/제공', '파기', '권리·의무 행사방법', '자! 해치가 준비한 서울시의 개인정보 처리방침 소개는 여기까지예요~', '개인정보 열람청구, 정정·삭제, 처리정지 청구 절차']],
+    ['H6', ['위탁이란', '제공이란']]
+  ]),
+  privacyPortal: new Map([
+    ['H4', ['통합인증', '개인정보 포털 주요 서비스', '자주 이용하는 서비스 바로가기', '개인정보보호위원회 <개인정보 포털> 개인정보 처리방침', '주요 개인정보 처리 표시(라벨링)', '목차', '']],
+  ]),
+  coupang: new Map([
+    ['H4', ['개인정보처리방침', 'Easy 개인정보처리방침', '공지사항']],
+    ['H5', ['*']]  
+  ]),
+  kbbank: new Map([
+  ['H3', ['개인', '기업', '자산관리', '부동산', '퇴직연금', '카드', '전체서비스', 'GLOBAL']],
+  ['H4', ['*']]  
+  ]),
+  samsung: new Map([
+  ['H3', ['제품', '기획전/혜택', '고객서비스', '지속가능경영', '회사소개', '부가정보', '윤리&준법경영']],
+  ['H4', ['*']] 
+  ]),
+};
+
+function getExcludedMap(htmlString) {
+  const dom = new JSDOM(htmlString);
+  const bodyText = dom.window.document.body.textContent;
+
+  // 디버깅을 위한 helper 함수
+  function logMatch(keyword, contextRange = 30) {
+    const idx = bodyText.indexOf(keyword);
+    if (idx !== -1) {
+      const context = bodyText.slice(
+        Math.max(0, idx - contextRange),
+        idx + keyword.length + contextRange
+      );
+     // console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
+      //console.log(`🔎 주변 텍스트: "...${context}..."`);
+    } else {
+     // console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
     }
   }
 
-  return md;
-};
+  if (bodyText.includes('네이버 고객센터')) {
+    logMatch('네이버 고객센터');
+    //console.log('📌 [getExcludedMap] 네이버 맵 사용');
+    return excludedMapBySite.naver;
+  }
+  if (bodyText.includes('서울시 개인정보 처리방침 쉽게 알기')) {
+    logMatch('서울시 개인정보 처리방침 쉽게 알기');
+   // console.log('📌 [getExcludedMap] 서울특별시 맵 사용');
+    return excludedMapBySite.seoul;
+  }
+  if (bodyText.includes('개인정보 포털 주요')) {
+    logMatch('개인정보 포털 주요');
+    //console.log('📌 [getExcludedMap] 개인정보포털 맵 사용');
+    return excludedMapBySite.privacyPortal;
+  }
+  if (bodyText.includes('쿠팡 개인정보처리방침')) {
+    logMatch('쿠팡 개인정보처리방침');
+    //console.log('📌 [getExcludedMap] 쿠팡 맵 사용');
+    return excludedMapBySite.coupang;
+  }
+  if (bodyText.includes('KB국민은행은 다음의 목적을 위하여')) {
+    logMatch('KB국민은행은 다음의 목적을 위하여');
+    //console.log('📌 [getExcludedMap] 국민은행 맵 사용');
+    return excludedMapBySite.kbbank;
+  }
+  if (bodyText.includes('삼성계정 비로그인 회원')) {
+    logMatch('삼성계정 비로그인 회원');
+  //  console.log('📌 [getExcludedMap] 삼성 맵 사용');
+    return excludedMapBySite.samsung;
+  }
+  //console.log('📌 [getExcludedMap] 기본 맵 사용 (매칭된 키워드 없음)');
+  return excludedMapBySite.default;
+}
 
-// HTML 전체를 마크다운으로 변환하는 메인 함수
+function cleanMarkdownIfNeeded(bodyText, markdownText) {
+  function logMatch(keyword, contextRange = 30) {
+    const idx = bodyText.indexOf(keyword);
+    if (idx !== -1) {
+      const context = bodyText.slice(
+        Math.max(0, idx - contextRange),
+        idx + keyword.length + contextRange
+      );
+      //console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
+      //console.log(`🔎 주변 텍스트: "...${context}..."`);
+    } else {
+      //console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
+    }
+  }
+
+  if (bodyText.includes('개인정보 포털 주요')) {
+    logMatch('개인정보 포털 주요');
+   // console.log('📌 개인정보포털 맵 사용');
+
+    const cutPoint = markdownText.indexOf('**분쟁조정 신청**');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  if (bodyText.includes('서울시 개인정보 처리방침 쉽게 알기')) {
+    logMatch('서울시 개인정보 처리방침 쉽게 알기');
+    //console.log('📌  서울특별시 맵 사용');
+
+    const cutPoint = markdownText.indexOf('이 게시물은 **공공누리 제4유형(출처표시 + 상업적 이용금지 + 변경금지)** 조건에 따라 자유롭게 이용이 가능합니다.');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  if (bodyText.includes('네이버 고객센터')) {
+    logMatch('네이버 고객센터');
+    //console.log('📌 네이버 맵 사용');
+
+    const cutPoint = markdownText.indexOf('[이전 개인정보처리방침 전체 목록 보기]');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  if (bodyText.includes('카카오 개인정보 처리방침')) {
+    logMatch('카카오 개인정보 처리방침');
+    //console.log('📌 카카오 맵 사용');
+
+    const cutPoint = markdownText.indexOf('#### 변경 전 개인정보 처리방침 보기');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  // 쿠팡 관련 제거 처리 예시
+  if (bodyText.includes('쿠팡 개인정보처리방침')) {
+    logMatch('쿠팡 개인정보처리방침');
+    //console.log('📌쿠팡 맵 사용');
+
+    const cutPoint = markdownText.indexOf('#### 3\\. 이용자의 동의없는 이용 및 제공');
+    if (cutPoint !== -1) {
+      markdownText = markdownText.slice(0, cutPoint).trim();
+    }
+
+    // 2) "다른 버전 보기"부터 "개인정보 제3자제공 현황(국외)"까지 삭제
+    const startKeyword = '다른 버전 보기';
+    const endKeyword = '개인정보 제3자제공 현황(국외)';
+
+    const startIdx = markdownText.indexOf(startKeyword);
+    const endIdx = markdownText.indexOf(endKeyword);
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      markdownText = markdownText.slice(0, startIdx) + markdownText.slice(endIdx + endKeyword.length);
+      markdownText = markdownText.trim();
+    }
+    return markdownText;
+  }
+
+  if (bodyText.includes('농협중앙회는 다음의 목적을 위하여')) {
+    logMatch('농협중앙회는 다음의 목적을 위하여');
+    //console.log('📌 농협중앙회 맵 사용');
+
+    const cutPoint = markdownText.indexOf('아래에서 확인하실 수 있습니다.');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  if (bodyText.includes('교보 관계사')) {
+    logMatch('교보 관계사');
+    //console.log('📌 교보문고 맵 사용');
+
+    const cutPoint = markdownText.indexOf('개인정보처리방침 V1.0');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  if (bodyText.includes('아주대학교는 법령의 규정과')) {
+    logMatch('아주대학교는 법령의 규정과');
+   // console.log('📌 아주대학교 맵 사용');
+
+    const cutPoint = markdownText.indexOf('[개정 이력 다운로드]');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  // 국민 은행 관련 제거 처리 예시
+  if (bodyText.includes('KB국민은행은 다음의 목적을 위하여')) {
+    logMatch('KB국민은행은 다음의 목적을 위하여');
+   // console.log('📌국민은행 맵 사용');
+
+    const cutPoint = markdownText.indexOf('개정사항 비교표 보기 버튼으로 이전 개인정보처리방침 대비 변경 이력을 확인하실 수 있습니다.');
+    if (cutPoint !== -1) {
+      markdownText = markdownText.slice(0, cutPoint).trim();
+    }
+
+    // 2) "다른 버전 보기"부터 "개인정보 제3자제공 현황(국외)"까지 삭제
+    const startKeyword = '[키워드검색](#)';
+    const endKeyword = '개인정보처리방침(2025년 4월 25일 개정)';
+
+    const startIdx = markdownText.indexOf(startKeyword);
+    const endIdx = markdownText.indexOf(endKeyword);
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      markdownText = markdownText.slice(0, startIdx) + markdownText.slice(endIdx + endKeyword.length);
+      markdownText = markdownText.trim();
+    }
+    return markdownText;
+  }
+  if (bodyText.includes('삼성계정 비로그인 회원')) {
+    logMatch('삼성계정 비로그인 회원');
+    //console.log('📌 삼성 맵 사용');
+
+    const cutPoint = markdownText.indexOf('회사는 이외에도 제품 수리');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+
+  return markdownText; // 조건 미충족 시 원본 유지
+}
 const htmlToMarkdown = (htmlString) => {
+
+  // 🔧 스크립트 태그 제거
+  htmlString = htmlString.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  
   const dom = new JSDOM(htmlString);
   const document = dom.window.document;
-  const headings = [...document.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b')]; // 제목 계열 태그 전체 수집
+  const bodyText = document.body.textContent;
   const turndownService = new TurndownService();
-  const processedNodes = new Set();        // 변환 완료된 노드 관리
-  const processedCentralNodes = new Set(); // 중심 노드(대제목) 관리
-  let result = '';
+  const allHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')];
 
-  // TARGET_SECTIONS에 해당하는 중심 노드 필터링
-  const centralNodes = headings.filter(h => isTargetSection(h.textContent.trim()) && /^H[1-6]$/.test(h.tagName));
-
-  // 중심 노드의 레벨과 속성값 기반으로 키 생성
-  const attributeKeys = new Set();
-  centralNodes.forEach(h => {
-    if (/^H[1-6]$/.test(h.tagName)) {
-      const level = parseInt(h.tagName[1]);
-      const key = `level-${level}|class=${h.getAttribute('class') || ''}|id=${h.getAttribute('id') || ''}`;
-      attributeKeys.add(key);
-    }
+  // 1) 키워드에 맞는 노드 필터링
+  const targetNodes = allHeadings.filter(h => isTargetSection(h.textContent.trim()));
+  
+  // 🔍 키워드 기반 중심 노드 목록 로그 출력
+  //console.log('🔑 키워드 기반 중심 노드 목록:');
+  targetNodes.forEach((node, idx) => {
+    //console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
-  // 중심 노드 기준으로 인접한 레벨의 제목 태그들도 수집
-  const levelMatchedNodes = [];
-  centralNodes.forEach(central => {
-    const currentLevel = parseInt(central.tagName[1]);
-    const validLevels = [currentLevel - 1, currentLevel + 1, currentLevel].filter(l => l >= 1 && l <= 6);
+  // === 예외 처리 추가 ===
+  if (targetNodes.length === 0) {
+    throw new Error('해당 페이지는 처리할 수 없습니다. (기술적 이슈)');
+  }
 
-    headings.forEach(h => {
-      const level = parseInt(h.tagName[1]);
-      if (validLevels.includes(level)) {
-        levelMatchedNodes.push(h);
+  // 2) 중심 노드 확장: ±1 레벨 (네이버만), 아니면 동일 레벨만
+  const expandedCenterNodes = [];
+  const isNaver = htmlString.toLowerCase().includes('네이버 고객센터');
+  const excludedMap = getExcludedMap(htmlString);
+
+  // 중심 노드 확장
+  targetNodes.forEach(baseNode => {
+    const baseLevel = parseInt(baseNode.tagName.replace('H', ''), 10);
+
+    allHeadings.forEach(h => {
+      const level = parseInt(h.tagName.replace('H', ''), 10);
+
+      const levelCondition = isNaver
+        ? Math.abs(level - baseLevel) <= 1
+        : level === baseLevel;
+
+      if (levelCondition && !isDuplicateCenterNode(h, expandedCenterNodes)) {
+        expandedCenterNodes.push(h);
       }
     });
   });
 
-  // 중심 노드 + 인접 레벨 노드 합치기
-  const combinedNodes = [...centralNodes, ...levelMatchedNodes];
-
-  // 중복 제거 (tag, class, id, 텍스트 기준)
-  const seen = new Set();
-  const uniqueNodes = combinedNodes.filter(h => {
-    const key = `${h.tagName}|${h.getAttribute('class') || ''}|${h.getAttribute('id') || ''}|${h.textContent.trim()}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  // 🔍 확장된 중심 노드 목록 출력
+  //console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
+  expandedCenterNodes.forEach((node, idx) => {
+  //  console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
-  const filteredUniqueNodes = uniqueNodes.filter(h => {
+  // 중심 노드 제거: excludedMap 기준
+  const filteredCenterNodes = expandedCenterNodes.filter(h => {
+    const tag = h.tagName.toUpperCase(); // 항상 대문자로
     const text = h.textContent.trim();
-    const tag = h.tagName;
-    const cls = h.getAttribute('class') || '';
-    const id = h.getAttribute('id') || '';
+    const excludedTexts = excludedMap.get(tag);
 
-    // 카카오 필터링 조건
-    const isKakaoPolicy = text === '카카오 개인정보 처리방침' && tag === 'H3' && cls === 'screen_out';
-
-    // 네이버 필터링 조건 1: 네이버에서만 제공하는 특별한 개인정보처리방침
-    const isNaverSpecialPolicy = text === '네이버에서만 제공하는 특별한 개인정보처리방침' && tag === 'H3' && cls === 'sp' && id === '';
-
-    // 네이버 필터링 조건 2: 네이버 개인정보처리방침
-    const isNaverPolicy = text === '네이버 개인정보처리방침' && tag === 'H3' && cls === '' && id === '';
-
-    // 위 3가지에 해당하는 경우 제외
-    return !(isKakaoPolicy || isNaverSpecialPolicy || isNaverPolicy);
+    const shouldExclude = excludedTexts && (excludedTexts.includes('*') || excludedTexts.includes(text));
+    if (shouldExclude) {
+      //console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
+    }
+    return !shouldExclude;
   });
 
-  // 🔽🔽🔽 중복 제거 후 최종 노드 목록 출력 🔽🔽🔽
-  console.log('▶ 중복 제거 후 uniqueNodes 목록');
-  filteredUniqueNodes.forEach(h => {
-    console.log(`- [${h.tagName}] ${h.textContent.trim()} (class="${h.getAttribute('class') || ''}", id="${h.getAttribute('id') || ''}")`);
+  // 🔍 필터링 후 중심 노드 목록 출력
+  //console.log('\n✅ 최종 중심 노드 목록 (제외 조건 적용됨):');
+  filteredCenterNodes.forEach((node, idx) => {
+  //  console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
-  // 각 중심 노드 기준으로 하위 노드 및 형제 노드 처리
-  filteredUniqueNodes.forEach(heading => {
-    if (processedCentralNodes.has(heading)) return;
+  const centerNodesSet = new Set(filteredCenterNodes);
 
-    result += processNode(heading, processedNodes, turndownService);
-    processedCentralNodes.add(heading);
+  let result = '';
+  const processedNodes = new Set();
+  const processedTexts = new Set();
 
-    const childNodes = [...heading.children];
+  for (const centerNode of filteredCenterNodes) {
+    //console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
 
-    // 자식 노드가 있으면 자식 노드부터 처리
-    if (childNodes.length > 0) {
-      childNodes.forEach(c => result += processNode(c, processedNodes, turndownService));
+    result += convertNodeToMarkdown(centerNode, turndownService, processedNodes, processedTexts);
+
+    const contentNodes = collectUntilNextCenter(centerNode, centerNodesSet, processedNodes);
+
+    for (const node of contentNodes) {
+      const preview = (node.textContent || '').trim().slice(0, 30);
+      //console.log(`  ↳ 처리 중인 노드: <${node.tagName || 'undefined'}> "${preview}..."`);
+      result += convertNodeToMarkdown(node, turndownService, processedNodes, processedTexts);
     }
-
-    // 자식 노드 처리 후에도 형제 노드를 계속 처리
-    let sibling = heading.nextElementSibling;
-    while (sibling) {
-      const isNextCentralNode = filteredUniqueNodes.includes(sibling);
-      if (isNextCentralNode) {
-        // 다른 중심 노드가 나오면 반복 종료
-        break;
-      }
-
-      result += processNode(sibling, processedNodes, turndownService);
-      sibling = sibling.nextElementSibling;
-    }
-
-    // 형제 노드가 거의 없는 경우, 부모의 다음 형제 노드를 추가로 확인
-    const siblingTextSum = [...heading.nextElementSibling?.children || []].reduce((sum, el) => sum + el.textContent.trim().length, 0);
-    if (siblingTextSum < 10) {
-      const parent = heading.parentElement;
-      let parentSibling = parent?.nextElementSibling;
-      let parentSiblingCount = 0;
-
-      while (parentSibling && parentSiblingCount < 2) {
-        if (parentSibling.textContent.trim().length > 0) {
-          result += processNode(parentSibling, processedNodes, turndownService);
-        }
-        parentSibling = parentSibling.nextElementSibling;
-        parentSiblingCount++;
-      }
-    }
+  }
+  // 여기서 cleanMarkdownIfNeeded 호출하여 조건에 따라 '**분쟁조정 신청**' 이후 텍스트 제거
+  result = cleanMarkdownIfNeeded(bodyText, result);
 
 
-    // 이미 처리한 중심 노드는 삭제
-    heading.remove();
-  });
-
-    return result.trim();
+  return result.trim();
 };
 
 module.exports = htmlToMarkdown;
