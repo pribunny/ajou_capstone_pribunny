@@ -29,6 +29,10 @@ app.use("/api", indexRoutes);
 const summarizeRoutes = require("./routes/summarize")
 app.use("/api/summary", summarizeRoutes);
 
+// 탐지 라우터
+const unfairDetectRoutes = require("./routes/unfairdetect")
+app.use("/api/unfairDetect", unfairDetectRoutes);
+
 // 추출 라우터
 const extractRoutes = require("./routes/extract")
 app.use("/api/extract", extractRoutes);
