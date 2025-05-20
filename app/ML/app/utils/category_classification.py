@@ -1,23 +1,20 @@
 from pymilvus import connections, Collection
 from typing import List
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 import os
+
+from app.utils.get_embedding import get_embeddings
 
 class TextBatch(BaseModel):
     texts: List[str]
 
-model = SentenceTransformer("jhgan/ko-sbert-sts")
-
 milvus_host = os.getenv("MILVUS_HOST", "localhost")
 milvus_port = os.getenv("MILVUS_PORT", "19530")
 
-connections.connect(alias="default", host=milvus_host, port=milvus_port)
-collection = Collection("category_embeddings")
-collection.load()
-
 def get_category_classify(contexts: TextBatch):
-    embeddings = model.encode(contexts.texts, convert_to_tensor = False)
+    embeddings = get_embeddings(contexts.texts)
+
+    collection = Collection("category_embeddings")
 
     results = []
     search_results = collection.search(
