@@ -5,8 +5,9 @@ from langchain_core.vectorstores import VectorStoreRetriever
 import os
 from pymilvus import connections, Collection
 
-milvus_host = os.getenv("MILVUS_HOST", "localhost")
+milvus_host = os.getenv("MILVUS_HOST", "124.0.3.124")
 milvus_port = os.getenv("MILVUS_PORT", "19530")
+print("환경변수 디버깅", milvus_host, milvus_port)
 
 def get_milvus_retriever(
         collection_name: str = "legal_documents_lib",

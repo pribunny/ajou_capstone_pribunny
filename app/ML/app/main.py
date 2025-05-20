@@ -1,13 +1,15 @@
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
-env_path = Path(__file__).resolve().parent / "../.env.dev"
-load_dotenv(dotenv_path=env_path)
+# 로컬에서만 .env 불러오기
+if os.getenv("RUN_ENV") != "production":
+    env_path = Path(__file__).resolve().parent / "../.env.dev"
+    load_dotenv(dotenv_path=env_path)
 
 from fastapi import FastAPI
 from app.routes.summary import summary
 from app.routes.detect import detect
-import os
 
 app = FastAPI()
 
