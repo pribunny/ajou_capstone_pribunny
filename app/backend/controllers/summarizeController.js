@@ -3,6 +3,8 @@ const splitParagraphs = require('../utils/splitParagraphs');
 const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
 
+const modelServerUrl = process.env.MODEL_SERVER_IP
+
 const summarizeController = async (req, res) => {
   try {
     const { data_size } = req.query;
@@ -91,7 +93,7 @@ const summarizeController = async (req, res) => {
       //console.log('contexts 타입 확인:', Array.isArray(paragraphs));  // ✅ true이면 리스트
       
       modelResponse = await axios.post(
-        `http://10.0.3.118:8000/llm/summaries/`,
+        `http://${modelServerUrl}/llm/summaries`,
         {
           documentId,
           contexts: paragraphs

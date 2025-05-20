@@ -79,5 +79,6 @@ async def summarize_privacy_policy(request: SummaryRequest):
         )
 
     except Exception as e:
+        logger.error(f"[SUMMARY ERROR] {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
