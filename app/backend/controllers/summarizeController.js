@@ -70,7 +70,7 @@ const summarizeController = async (req, res) => {
       console.log(`  [${idx + 1}] ${para}`);
     });
     
-    const apiUrl = `http://backend-ml:8000/llm/summaries/`;
+    const apiUrl = `http://10.0.3.118:8000/llm/summaries/`;
 
     const modelResponse = await axios.post(apiUrl, requestBody, {
       headers: { 'Content-Type': 'application/json' }
