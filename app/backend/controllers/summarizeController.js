@@ -89,8 +89,9 @@ const summarizeController = async (req, res) => {
       //   contexts: paragraphs
       // }); // ✅ 추가된 로그
       //console.log('contexts 타입 확인:', Array.isArray(paragraphs));  // ✅ true이면 리스트
+      
       modelResponse = await axios.post(
-        'http://backend-ml:8000/llm/summaries/',
+        `http://10.0.3.118:8000/llm/summaries/`,
         {
           documentId,
           contexts: paragraphs
