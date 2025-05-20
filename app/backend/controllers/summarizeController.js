@@ -95,7 +95,7 @@ const summarizeController = async (req, res) => {
 
       
       modelResponse = await axios.post(
-        `http://ml-test-249570354.ap-northeast-2.elb.amazonaws.com/llm/summaries/`,
+        `http://${modelServerUrl}/llm/summaries/`,
 
         {
           documentId,
