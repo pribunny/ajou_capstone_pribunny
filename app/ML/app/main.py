@@ -13,8 +13,6 @@ from pymilvus import connections
 from app.routes.summary import summary
 from app.routes.detect import detect
 
-app = FastAPI()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 앱 시작 시 실행 (Milvus 연결)
@@ -34,6 +32,8 @@ async def lifespan(app: FastAPI):
     # 앱 종료 시 실행
     connections.disconnect(alias="default")
     print("Milvus 연결 종료됨")
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(summary)
 app.include_router(detect)

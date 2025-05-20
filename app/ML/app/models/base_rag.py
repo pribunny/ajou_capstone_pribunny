@@ -21,5 +21,5 @@ class BaseRAGChain:
 
         context = search_context(query) # 문서 검색
 
-        return await self.chain.ainvoke({"query": query, "context": context})
+        return await self.chain.ainvoke({"question": query, "context": context})
 

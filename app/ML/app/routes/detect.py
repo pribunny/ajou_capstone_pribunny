@@ -51,9 +51,8 @@ async def detect_unfair_clause(request: DetectRequest):
                 detect_chain = BaseRAGChain(prompt=prompt)
                 llm_result = await detect_chain.run_async(query=merged_context)
 
-                print("결과: ", llm_result["result"])
-
-                items = extract_json_from_response(llm_result["result"])
+                print("결과: ", llm_result.content)
+                items = extract_json_from_response(llm_result.content)
 
                 return DetectItem(
                     category=cat,

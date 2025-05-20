@@ -22,7 +22,6 @@ def search_context(query):
             f"[ {re.entity.law_name}, {re.entity.chapter}, {re.entity.section}, {re.entity.clause_title} ]\n"
             f"{re.entity.text}"
         )
-        print(res)
         hits.append(res)
 
     context = "\n".join([hit for hit in hits])
