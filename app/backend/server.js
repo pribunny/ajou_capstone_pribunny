@@ -10,16 +10,16 @@ require("dotenv").config({ path: envFile });
 
 const app = express();
 const PORT = process.env.API_PORT || 3000;
-
-// 인증서 경로
-const sslOptions = {
-    key: fs.readFileSync(process.env.PRIVATE_KEY_PATH),
-    cert: fs.readFileSync(process.env.PUBLIC_KEY_PATH)
-};
+const HOST = process.env.HOST || "localhost"
 
 // 미들웨어
 app.use(cors());
 app.use(express.json());
+
+// 헬스 체크 라우터 (ALB 상태 확인용)
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
 
 // 라우터
 const indexRoutes = require("./routes/index");
@@ -29,12 +29,11 @@ app.use("/api", indexRoutes);
 const summarizeRoutes = require("./routes/summarize")
 app.use("/api/summary", summarizeRoutes);
 
-
 // 추출 라우터
 const extractRoutes = require("./routes/extract")
 app.use("/api/extract", extractRoutes);
 
-// 서버 실행
-https.createServer(sslOptions, app).listen(PORT, () => {
-    console.log(`🔒 HTTPS server running at https://localhost:${PORT}`);
+// prod/dev 모두 HTTP 서버 실행
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 HTTP server running at http://${HOST}:${PORT}`);
 });

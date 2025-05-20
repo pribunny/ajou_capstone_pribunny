@@ -1,0 +1,11 @@
+services:
+  backend-node:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.prod # 배포용 Dockerfile 적용
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./app/backend/.env.prod
+    restart: always
+

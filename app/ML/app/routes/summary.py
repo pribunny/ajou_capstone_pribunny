@@ -48,9 +48,10 @@ async def summarize_privacy_policy(request: SummaryRequest):
             prompt = get_summary_detect(cat)
             merged_context = "\n\n".join(paragraphs)
             summary_chain = SummaryChain(prompt=prompt)
-            llm_result = await summary_chain.run_async(input_text=merged_context)
+            llm_result = await summary_chain.run_async(input_text=merged_context, category=cat)
+            print(llm_result.content)
             items = extract_json_from_response(llm_result.content)
-            print(llm_result)
+            print("\n\n")
 
             return SummaryItem(
                 category=cat,

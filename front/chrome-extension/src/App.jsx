@@ -5,6 +5,8 @@ import ResultPage from './pages/ResultPage'
 import Popup from './pages/Popup'
 import SettingPage from './pages/SettingPage'
 import ResultUnfairDetail from './pages/ResultUnfairDetail';
+import ErrorPage from './pages/ErrorPage';
+
 
 
 import SettingAddPhrase from './pages/SettingAddPhrase';   
@@ -20,6 +22,7 @@ function App() {
           <Route path="/setting/settingaddphrase" element={<SettingAddPhrase />} /> 수정
           <Route path="/setting/settingaddprivacy" element={<SettingAddPrivacy />} /> 수정
           <Route path="/start/resultdetail" element={<ResultUnfairDetail />} />
+          <Route path="/error" element={<ErrorPage />} />
 
       </Routes>
 

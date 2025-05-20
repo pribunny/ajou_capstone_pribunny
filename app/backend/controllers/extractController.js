@@ -17,7 +17,7 @@ const extractController = async (req, res) => {
     let markdown = '';
 
     if (ext === '.pdf') {
-      const modelServerUrl = 'http://backend-ml:8000/extract-text';
+      const modelServerUrl = 'http://10.0.3.118:8000/extract-text';
       const modelResponse = await axios.post(modelServerUrl, { filePath });
 
       if (!modelResponse.data.success) {
