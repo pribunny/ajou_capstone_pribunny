@@ -8,3 +8,4 @@ const summarizeText = require("../controllers/summarizeController");
 router.post("/", summarizeText);
 
 module.exports = router;
+

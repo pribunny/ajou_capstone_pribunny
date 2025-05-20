@@ -22,6 +22,7 @@ const TARGET_SECTIONS = [
   '가명정보.*처리',
   '민감정보.*공개',
   '개인정보.*보호수준',
+  '개인정보.*보호 권리',
 ];
 
 const isTargetSection = (text) => {
@@ -120,7 +121,6 @@ const convertNodeToMarkdown = (node, turndownService, processedNodes, processedT
   if (!node.tagName) return '';
 
   // 부모 노드에 이미 포함된 텍스트라면 중복 방지
-  // (부모 노드 텍스트와 비교해 중복 여부 체크)
   let parent = node.parentElement;
   while (parent) {
     if (processedNodes.has(parent)) {
@@ -153,6 +153,7 @@ const convertNodeToMarkdown = (node, turndownService, processedNodes, processedT
     return `\n${turndownService.turndown(html)}\n`;
   }
 };
+
 // 사이트별 제외 규칙
 const excludedMapBySite = {
   default: new Map([
@@ -176,12 +177,12 @@ const excludedMapBySite = {
     ['H5', ['*']]  
   ]),
   kbbank: new Map([
-  ['H3', ['개인', '기업', '자산관리', '부동산', '퇴직연금', '카드', '전체서비스', 'GLOBAL']],
-  ['H4', ['*']]  
+    ['H3', ['개인', '기업', '자산관리', '부동산', '퇴직연금', '카드', '전체서비스', 'GLOBAL']],
+    ['H4', ['*']]  
   ]),
   samsung: new Map([
-  ['H3', ['제품', '기획전/혜택', '고객서비스', '지속가능경영', '회사소개', '부가정보', '윤리&준법경영']],
-  ['H4', ['*']] 
+    ['H3', ['제품', '기획전/혜택', '고객서비스', '지속가능경영', '회사소개', '부가정보', '윤리&준법경영']],
+    ['H4', ['*']] 
   ]),
 };
 
@@ -197,44 +198,45 @@ function getExcludedMap(htmlString) {
         Math.max(0, idx - contextRange),
         idx + keyword.length + contextRange
       );
-     // console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
-      //console.log(`🔎 주변 텍스트: "...${context}..."`);
+      console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
+      console.log(`🔎 주변 텍스트: "...${context}..."`);
     } else {
-     // console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
+      console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
     }
   }
 
   if (bodyText.includes('네이버 고객센터')) {
     logMatch('네이버 고객센터');
-    //console.log('📌 [getExcludedMap] 네이버 맵 사용');
+    console.log('📌 [getExcludedMap] 네이버 맵 사용');
     return excludedMapBySite.naver;
   }
   if (bodyText.includes('서울시 개인정보 처리방침 쉽게 알기')) {
     logMatch('서울시 개인정보 처리방침 쉽게 알기');
-   // console.log('📌 [getExcludedMap] 서울특별시 맵 사용');
+    console.log('📌 [getExcludedMap] 서울특별시 맵 사용');
     return excludedMapBySite.seoul;
   }
   if (bodyText.includes('개인정보 포털 주요')) {
     logMatch('개인정보 포털 주요');
-    //console.log('📌 [getExcludedMap] 개인정보포털 맵 사용');
+    console.log('📌 [getExcludedMap] 개인정보포털 맵 사용');
     return excludedMapBySite.privacyPortal;
   }
   if (bodyText.includes('쿠팡 개인정보처리방침')) {
     logMatch('쿠팡 개인정보처리방침');
-    //console.log('📌 [getExcludedMap] 쿠팡 맵 사용');
+    console.log('📌 [getExcludedMap] 쿠팡 맵 사용');
     return excludedMapBySite.coupang;
   }
   if (bodyText.includes('KB국민은행은 다음의 목적을 위하여')) {
     logMatch('KB국민은행은 다음의 목적을 위하여');
-    //console.log('📌 [getExcludedMap] 국민은행 맵 사용');
+    console.log('📌 [getExcludedMap] 국민은행 맵 사용');
     return excludedMapBySite.kbbank;
   }
   if (bodyText.includes('삼성계정 비로그인 회원')) {
     logMatch('삼성계정 비로그인 회원');
-  //  console.log('📌 [getExcludedMap] 삼성 맵 사용');
+    console.log('📌 [getExcludedMap] 삼성 맵 사용');
     return excludedMapBySite.samsung;
   }
-  //console.log('📌 [getExcludedMap] 기본 맵 사용 (매칭된 키워드 없음)');
+  
+  console.log('📌 [getExcludedMap] 기본 맵 사용 (매칭된 키워드 없음)');
   return excludedMapBySite.default;
 }
 
@@ -246,16 +248,16 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
         Math.max(0, idx - contextRange),
         idx + keyword.length + contextRange
       );
-      //console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
-      //console.log(`🔎 주변 텍스트: "...${context}..."`);
+      console.log(`📍 키워드 "${keyword}" 발견 위치:`, idx);
+      console.log(`🔎 주변 텍스트: "...${context}..."`);
     } else {
-      //console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
+      console.log(`❌ 키워드 "${keyword}"는 본문에 없음.`);
     }
   }
 
   if (bodyText.includes('개인정보 포털 주요')) {
     logMatch('개인정보 포털 주요');
-   // console.log('📌 개인정보포털 맵 사용');
+    console.log('📌 개인정보포털 맵 사용');
 
     const cutPoint = markdownText.indexOf('**분쟁조정 신청**');
     if (cutPoint !== -1) {
@@ -264,7 +266,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('서울시 개인정보 처리방침 쉽게 알기')) {
     logMatch('서울시 개인정보 처리방침 쉽게 알기');
-    //console.log('📌  서울특별시 맵 사용');
+    console.log('📌  서울특별시 맵 사용');
 
     const cutPoint = markdownText.indexOf('이 게시물은 **공공누리 제4유형(출처표시 + 상업적 이용금지 + 변경금지)** 조건에 따라 자유롭게 이용이 가능합니다.');
     if (cutPoint !== -1) {
@@ -273,7 +275,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('네이버 고객센터')) {
     logMatch('네이버 고객센터');
-    //console.log('📌 네이버 맵 사용');
+    console.log('📌 네이버 맵 사용');
 
     const cutPoint = markdownText.indexOf('[이전 개인정보처리방침 전체 목록 보기]');
     if (cutPoint !== -1) {
@@ -282,7 +284,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('카카오 개인정보 처리방침')) {
     logMatch('카카오 개인정보 처리방침');
-    //console.log('📌 카카오 맵 사용');
+    console.log('📌 카카오 맵 사용');
 
     const cutPoint = markdownText.indexOf('#### 변경 전 개인정보 처리방침 보기');
     if (cutPoint !== -1) {
@@ -292,7 +294,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   // 쿠팡 관련 제거 처리 예시
   if (bodyText.includes('쿠팡 개인정보처리방침')) {
     logMatch('쿠팡 개인정보처리방침');
-    //console.log('📌쿠팡 맵 사용');
+    console.log('📌쿠팡 맵 사용');
 
     const cutPoint = markdownText.indexOf('#### 3\\. 이용자의 동의없는 이용 및 제공');
     if (cutPoint !== -1) {
@@ -315,7 +317,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
 
   if (bodyText.includes('농협중앙회는 다음의 목적을 위하여')) {
     logMatch('농협중앙회는 다음의 목적을 위하여');
-    //console.log('📌 농협중앙회 맵 사용');
+    console.log('📌 농협중앙회 맵 사용');
 
     const cutPoint = markdownText.indexOf('아래에서 확인하실 수 있습니다.');
     if (cutPoint !== -1) {
@@ -324,7 +326,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('교보 관계사')) {
     logMatch('교보 관계사');
-    //console.log('📌 교보문고 맵 사용');
+    console.log('📌 교보문고 맵 사용');
 
     const cutPoint = markdownText.indexOf('개인정보처리방침 V1.0');
     if (cutPoint !== -1) {
@@ -333,7 +335,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('아주대학교는 법령의 규정과')) {
     logMatch('아주대학교는 법령의 규정과');
-   // console.log('📌 아주대학교 맵 사용');
+    console.log('📌 아주대학교 맵 사용');
 
     const cutPoint = markdownText.indexOf('[개정 이력 다운로드]');
     if (cutPoint !== -1) {
@@ -343,7 +345,7 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   // 국민 은행 관련 제거 처리 예시
   if (bodyText.includes('KB국민은행은 다음의 목적을 위하여')) {
     logMatch('KB국민은행은 다음의 목적을 위하여');
-   // console.log('📌국민은행 맵 사용');
+    console.log('📌국민은행 맵 사용');
 
     const cutPoint = markdownText.indexOf('개정사항 비교표 보기 버튼으로 이전 개인정보처리방침 대비 변경 이력을 확인하실 수 있습니다.');
     if (cutPoint !== -1) {
@@ -365,14 +367,23 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
   }
   if (bodyText.includes('삼성계정 비로그인 회원')) {
     logMatch('삼성계정 비로그인 회원');
-    //console.log('📌 삼성 맵 사용');
+    console.log('📌 삼성 맵 사용');
 
     const cutPoint = markdownText.indexOf('회사는 이외에도 제품 수리');
     if (cutPoint !== -1) {
       return markdownText.slice(0, cutPoint).trim();  // 이후 제거
     }
   }
+  if (bodyText.includes('지그재그 공유 리워드')) {
+    logMatch('지그재그 공유 리워드');
+    console.log('📌 지그재그 맵 사용');
 
+    const cutPoint = markdownText.indexOf('###### 이전 이용자 개인정보 처리방침 확인하기');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
+  
   return markdownText; // 조건 미충족 시 원본 유지
 }
 const htmlToMarkdown = (htmlString) => {
@@ -390,9 +401,9 @@ const htmlToMarkdown = (htmlString) => {
   const targetNodes = allHeadings.filter(h => isTargetSection(h.textContent.trim()));
   
   // 🔍 키워드 기반 중심 노드 목록 로그 출력
-  //console.log('🔑 키워드 기반 중심 노드 목록:');
+  console.log('🔑 키워드 기반 중심 노드 목록:');
   targetNodes.forEach((node, idx) => {
-    //console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
   // === 예외 처리 추가 ===
@@ -423,12 +434,12 @@ const htmlToMarkdown = (htmlString) => {
   });
 
   // 🔍 확장된 중심 노드 목록 출력
-  //console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
+  console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
   expandedCenterNodes.forEach((node, idx) => {
-  //  console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
-  // 중심 노드 제거: excludedMap 기준
+   //중심 노드 제거: excludedMap 기준
   const filteredCenterNodes = expandedCenterNodes.filter(h => {
     const tag = h.tagName.toUpperCase(); // 항상 대문자로
     const text = h.textContent.trim();
@@ -436,15 +447,15 @@ const htmlToMarkdown = (htmlString) => {
 
     const shouldExclude = excludedTexts && (excludedTexts.includes('*') || excludedTexts.includes(text));
     if (shouldExclude) {
-      //console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
+      console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
     }
     return !shouldExclude;
   });
 
   // 🔍 필터링 후 중심 노드 목록 출력
-  //console.log('\n✅ 최종 중심 노드 목록 (제외 조건 적용됨):');
+  console.log('\n✅ 최종 중심 노드 목록 (제외 조건 적용됨):');
   filteredCenterNodes.forEach((node, idx) => {
-  //  console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   });
 
   const centerNodesSet = new Set(filteredCenterNodes);
@@ -454,7 +465,7 @@ const htmlToMarkdown = (htmlString) => {
   const processedTexts = new Set();
 
   for (const centerNode of filteredCenterNodes) {
-    //console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
+    console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
 
     result += convertNodeToMarkdown(centerNode, turndownService, processedNodes, processedTexts);
 
@@ -466,7 +477,7 @@ const htmlToMarkdown = (htmlString) => {
       result += convertNodeToMarkdown(node, turndownService, processedNodes, processedTexts);
     }
   }
-  // 여기서 cleanMarkdownIfNeeded 호출하여 조건에 따라 '**분쟁조정 신청**' 이후 텍스트 제거
+  
   result = cleanMarkdownIfNeeded(bodyText, result);
 
 

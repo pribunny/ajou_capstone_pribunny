@@ -17,7 +17,19 @@ const splitParagraphs = (markdownText) => {
 
     const paragraphBlock = markdownText.slice(startIdx, endIdx).trim();
 
-    if (paragraphBlock) {
+    if (!paragraphBlock) continue;
+
+    // "잡코리아" 포함 시 ---- 기준으로 다시 분리
+    if (paragraphBlock.includes('잡코리아 고객센터')) {
+      const subParagraphs = paragraphBlock.split('----').map(p => p.trim()).filter(p => p);
+      for (const subPara of subParagraphs) {
+        const normalized = normalize(subPara);
+        if (!seen.has(normalized)) {
+          seen.add(normalized);
+          finalParagraphs.push(subPara);
+        }
+      }
+    } else {
       const normalized = normalize(paragraphBlock);
       if (!seen.has(normalized)) {
         seen.add(normalized);
