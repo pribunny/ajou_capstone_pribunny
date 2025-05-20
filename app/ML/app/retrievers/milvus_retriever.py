@@ -2,12 +2,6 @@ from pymilvus import Collection, connections
 
 from app.utils.get_embedding import get_embeddings
 
-connections.connect(
-    alias="default",
-    host="localhost",  # 또는 EC2 내부 IP / 도메인
-    port="19530"
-)
-
 def search_context(query):
     query_vector = get_embeddings(query)
 

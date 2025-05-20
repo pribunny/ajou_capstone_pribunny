@@ -18,10 +18,16 @@ app = FastAPI()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 앱 시작 시 실행 (Milvus 연결)
+
+    milvus_host = os.getenv("MILVUS_HOST")
+    milvus_port = os.getenv("MILVUS_PORT")
+
+    print(f"milvus: {milvus_host}:{milvus_port}")
+
     connections.connect(
         alias="default",
-        host=os.getenv("MILVUS_HOST"),  # 또는 EC2 IP / 도메인
-        port=os.getenv("MILVUS_PORT")
+        host=milvus_host,  # 또는 EC2 IP / 도메인
+        port=milvus_port
     )
     print("Milvus 연결됨")
     yield
