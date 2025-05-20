@@ -4,7 +4,6 @@ from typing import List, TypeVar, Dict, Any
 from collections import defaultdict
 from fastapi import APIRouter, HTTPException
 
-from app.prompts.unfair_clause_prompt import unfair_detect_template
 from app.routes.base import BaseResponse, make_base_response
 from app.utils.category_classification import TextBatch, get_category_classify
 from app.utils.json_parser import extract_json_from_response
@@ -46,18 +45,25 @@ async def detect_unfair_clause(request: DetectRequest):
             category_to_contexts[category].append(paragraph)
 
         async def detect_paragraph(cat: str, paragraphs: list[str]) -> DetectItem:
-            prompt = get_detect_prompt(cat)
-            merged_context = "\n\n".join(paragraphs)
-            detect_chain = BaseRAGChain(prompt=prompt)
-            llm_result = await detect_chain.run_async(query=merged_context)
-            print(llm_result["result"])
-            items = extract_json_from_response(llm_result["result"])
+            try:
+                prompt = get_detect_prompt(cat)
+                merged_context = "\n\n".join(paragraphs)
+                detect_chain = BaseRAGChain(prompt=prompt)
+                llm_result = await detect_chain.run_async(query=merged_context)
 
-            return DetectItem(
-                category=cat,
-                context=paragraphs,
-                detectItems=items
-            )
+                print("결과: ", llm_result["result"])
+
+                items = extract_json_from_response(llm_result["result"])
+
+                return DetectItem(
+                    category=cat,
+                    context=paragraphs,
+                    detectItems=items
+                )
+
+            except Exception as e:
+                print(f"LLM detect 실패 (카테고리: {cat}) → {type(e).__name__}: {e}")
+                raise e
 
         logger.info(f"탐지 실행 id: {doc_id}")
 

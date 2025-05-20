@@ -1,6 +1,5 @@
-from langchain_core.runnables import Runnable, RunnableSequence
+from langchain_core.runnables import Runnable
 from langchain_core.prompts import PromptTemplate
-from app.prompts.summariz_prompt import summary_template
 from app.models.llm import get_default_llm
 from app.utils.logger import logger
 
@@ -17,5 +16,5 @@ class SummaryChain:
     def _build_chain(self):
         self.chain: Runnable = self.prompt | self.llm
 
-    async def run_async(self, input_text: str):
-        return await self.chain.ainvoke({"full_clause": input_text})
+    async def run_async(self, input_text: str, category):
+        return await self.chain.ainvoke({"clauses": input_text, "category_name": category})
