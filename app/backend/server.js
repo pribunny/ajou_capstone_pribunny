@@ -10,7 +10,7 @@ require("dotenv").config({ path: envFile });
 
 const app = express();
 const PORT = process.env.API_PORT || 3000;
-const HOST = process.env.HOST || "localhost"
+const HOST = process.env.HOST || '0.0.0.0';
 
 // 미들웨어
 app.use(cors());

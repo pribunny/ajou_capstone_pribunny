@@ -2,6 +2,7 @@ const htmlToMarkdown = require('../utils/htmlToMarkdown');
 const splitParagraphs = require('../utils/splitParagraphs');
 const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
+const modelServerUrl = process.env.MODEL_SERVER_IP
 
 const unfairDetectController = async (req, res) => {
   try {
@@ -84,14 +85,15 @@ const unfairDetectController = async (req, res) => {
     // ✅ 3. 탐지 모델 요청
     let modelResponse;
     try {
-      // console.log('📤 탐지 모델에 보낼 요청 데이터:', {
-      //   documentId,
-      //   contexts: paragraphs
-      // }); // ✅ 추가된 로그
-      //console.log('contexts 타입 확인:', Array.isArray(paragraphs));  // ✅ true이면 리스트
+      console.log('\n====== 📤 탐지 모델 요청 시작 ======');
+      console.log('📌 documentId:', documentId);
+      console.log('📌 contexts (paragraphs):', paragraphs);
+      console.log('📌 typeof paragraphs:', typeof paragraphs);
+      console.log('📌 isArray:', Array.isArray(paragraphs));
+      console.log('📌 contexts.length:', paragraphs?.length);
       
       modelResponse = await axios.post(
-        `http://10.0.3.118:8000/llm/unfairDetects/`,
+        `http://${modelServerUrl}/llm/unfairDetects`,
         {
           documentId,
           contexts: paragraphs

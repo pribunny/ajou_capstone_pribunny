@@ -6,6 +6,5 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./app/backend/.env.prod
+      - ./app/backend/.env.prod 
     restart: always
-

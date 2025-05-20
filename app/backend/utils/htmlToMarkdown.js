@@ -465,7 +465,7 @@ const htmlToMarkdown = (htmlString) => {
   const processedTexts = new Set();
 
   for (const centerNode of filteredCenterNodes) {
-    console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
+    //console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
 
     result += convertNodeToMarkdown(centerNode, turndownService, processedNodes, processedTexts);
 
