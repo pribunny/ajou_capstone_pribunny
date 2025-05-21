@@ -6,9 +6,6 @@ import Popup from './pages/Popup'
 import SettingPage from './pages/SettingPage'
 import ResultUnfairDetail from './pages/ResultUnfairDetail';
 import ErrorPage from './pages/ErrorPage';
-
-
-
 import SettingAddPhrase from './pages/SettingAddPhrase';   
 import SettingAddPrivacy from './pages/SettingAddPrivacy'; 
 

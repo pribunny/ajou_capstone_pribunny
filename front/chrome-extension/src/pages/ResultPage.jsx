@@ -59,17 +59,6 @@ export default function ResultPage() {
             text : cleanText
         };
 
-        // const loadSummary = async () => {
-        //     try {
-        //         const data = await getSummarize(cleanHTML, 'long');
-        //         console.log(data.summaryItems);
-        //         setSummaryId(data.summaryId);
-        //         setSummaryItems(data.summaryItems);
-        //     } catch (error) {
-        //         // 에러 핸들링 -> 에러 코드를 출력하면 됨.
-        //         console.error('요약실패', error);
-        //     }
-        // };
         const loadSummary = async () => {
             try {
                 const data = await getSummarize(cleanData, 'long'); //수정
@@ -86,18 +75,6 @@ export default function ResultPage() {
                 });
             }
             };
-
-        // const loadUnfair = async () => {
-        //     try {
-        //         const data = await getUnfairDetect(cleanHTML, 'long');
-        //         console.log(data.unfairItems);
-        //         setUnfairId(data.unfairId);
-        //         setUnfairItems(data.unfairItems);
-        //     } catch (error) {
-        //         // 에러 핸들링 -> 에러 코드를 출력하면 됨.
-        //         console.error('불공정약관탐지실패', error);
-        //     }
-        // };
 
         const loadUnfair = async () => {
         try {
@@ -119,34 +96,6 @@ export default function ResultPage() {
         loadSummary();
         loadUnfair(); // 함수 이름도 맞춰서 호출
     }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
-
-    // // ✅ 요약 데이터 로딩
-    // useEffect(() => {
-    //     const loadSummary = async () => {
-    //     try {
-    //         const data = await getSummarize(testText, 'short');
-    //         setSummaryId(data.summaryId);
-    //         setSummaryItems(data.summaryItems);
-    //     } catch (error) {
-    //         console.error('요약 실패', error);
-    //     }
-    //     };
-    //     loadSummary();
-    // }, []);
-
-    // // ✅ 불공정 약관 탐지 로딩
-    // useEffect(() => {
-    //     const loadUnfair = async () => {
-    //     try {
-    //         const data = await getUnfairDetect(testText, 'short');
-    //         setUnfairId(data.unfairId);
-    //         setUnfairItems(data.unfairItems);
-    //     } catch (error) {
-    //         console.error('불공정약관 탐지 실패', error);
-    //     }
-    //     };
-    //     loadUnfair();
-    // }, []);
 
     useEffect(() => {
     chrome.storage.local.get(['privacySelections'], (result) => {
@@ -177,162 +126,85 @@ export default function ResultPage() {
     });
     }, []);
 
-
-    // return (
-    //     <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
-    //         <h2 className="text-center text-xl font-bold mb-2">PRIBUNNY</h2>
-    //         {(unfairItems.length === 0 || summaryItems.length === 0) ? (
-    //             <Loading />
-    //             ):
-    //             (
-    //                 <>
-    //                     {/* 상단 버튼 */}
-    //                     <div className="flex justify-center gap-4 mb-4">
-    //                         <button onClick={() => navigate('/setting')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-    //                             <img src={SetIcon} alt="Setting" className="w-6 h-6" />
-    //                         </button>
-    //                         <button onClick={() => navigate('/')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-    //                             <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-    //                         </button>
-    //                     </div>
-
-    //                     {/* 더보기 버튼 */}
-    //                     <div className="flex justify-between items-center mb-2">
-    //                         <span className="text-sm font-semibold">불공정약관</span>
-    //                         <button
-    //                         className="text-sm text-blue-600 hover:underline"
-    //                         onClick={() => navigate('resultdetail', {
-    //                         state: {
-    //                             unfairId,
-    //                             unfairItems
-    //                         }})
-    //                         }>
-    //                             더보기
-    //                         </button>
-    //                     </div>
-
-    //                     {/* 독소 조항 출력 영역 (내용 없음) */}
-    //                     <div className="border rounded-lg h-24 text-sm flex items-center px-2 whitespace-pre-wrap text-left">
-    //                         {unfairItems.length > 0 && (
-    //                             <p>
-    //                                 <strong>
-    //                                     {unfairItems.map(item => item.category).join(', ')}
-    //                                 </strong>
-    //                                 {" 에서 불공정약관을 찾았습니다!"}
-    //                             </p>
-    //                         )}
-    //                     </div>
-
-    //                     {/* 요약 제목 */}
-    //                     <div className="flex justify-between items-center mb-2">
-    //                         <span className="text-sm font-semibold">요약</span>
-    //                     </div>
-    //                     {/* 요약 출력 영역 */}
-    //                     <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm whitespace-pre-wrap text-left">
-    //                         <br />
-
-    //                         {/* {summaryItems.map((item, idx) => (
-    //                         <div key={idx} className="mb-3">
-    //                             <strong>{item.category}</strong><br />
-    //                             {item.summary_content}
-    //                         </div>
-    //                         ))} */}
-    //                         {summaryItems.map((item, idx) => (
-    //                         <div key={idx} className="mb-3">
-    //                             <strong>{item.category}</strong><br />
-    //                             {item.category === '처리하는 개인정보 항목'
-    //                             ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
-    //                             : item.summary_content}
-    //                         </div>
-    //                         ))}
-    //                     </div>
-    //                 </>
-    //             )}
-    //     </div>
-    // );
-
     return (
-        <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
-        <h2 className="text-center text-xl font-bold mb-2">PRIBUNNY</h2>
+        <div className="w-[360px] h-[460px] mx-auto bg-[#FFFDEB] rounded-2xl shadow-lg p-4 flex flex-col">
+        {/* ✅ 상단 타이틀 & 버튼 */}
+        <div className="relative flex items-center justify-center h-[40px]">
+        <button onClick={() => navigate('/setting')} className="absolute left-0 w-[26px] h-[26px]">
+            <img src={SetIcon} alt="Setting" className="w-[26px] h-[26px]" />
+        </button>
+        <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
+            PRIBUNNY
+        </h2>
+        <button onClick={() => navigate('/')} className="absolute right-0 w-[26px] h-[26px]">
+            <img src={HomeIcon} alt="Home" className="w-[26px] h-[26px]" />
+        </button>
+        </div>
+
+        {/* ✅ 구분선 */}
+        <div className="w-full h-[1px] bg-black mb-2" />
+
         {(unfairItems.length === 0 || summaryItems.length === 0) ? (
                 <Loading />
                 ):
                 (
                     <>
 
-        {/* 상단 버튼 */}
-        <div className="flex justify-center gap-4 mb-4">
-            <button onClick={() => navigate('/setting')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-            <img src={SetIcon} alt="Setting" className="w-6 h-6" />
-            </button>
-            <button onClick={() => navigate('/')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-            <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-            </button>
-        </div>
-        {/* 더보기 버튼 */}
+
+        {/* 스크롤 가능한 공통 출력 영역 */}
+        <div className="w-full flex-1 overflow-y-auto mt-2 px-1">
+
+        {/* 불공정약관 타이틀 + 더보기 */}
         <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold">불공정약관</span>
+            <span className="w-[100px] h-[35px] bg-[#FFFBCA] rounded-full text-[14px] font-bold font-['Noto_Sans'] flex items-center justify-center">
+            불공정 약관
+            </span>
             <button
-            className="text-sm text-blue-600 hover:underline"
             onClick={() => navigate('resultdetail', {
-            state: {
-                unfairId,
-                unfairItems
-                }})
-            }>
-                 더보기
-             </button>
+                state: { unfairId, unfairItems }
+            })}
+            className="w-[100px] h-[35px] bg-[#F9D5D9] rounded-full text-[14px] font-bold font-['Noto_Sans'] flex items-center justify-center hover:bg-[#f7c8cc] transition"
+            >
+            더보기
+            </button>
         </div>
 
-        {/* 독소 조항 출력 영역 (내용 없음) */}
-        <div className="border rounded-lg h-24 text-sm flex items-center px-2 whitespace-pre-wrap text-left">
+        {/* 불공정약관 내용 */}
+        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-5">
             {unfairItems.length > 0 && (
-                <p>
-                    <strong>
-                        {unfairItems.map(item => item.category).join(', ')}
-                    </strong>
-                    {" 에서 불공정약관을 찾았습니다!"}
-                </p>
+            <p>
+                <strong>{unfairItems.map(item => item.category).join(', ')}</strong>
+                {" 에서 불공정약관을 찾았습니다!"}
+            </p>
             )}
         </div>
 
-        {/* 요약 */}
+        {/* 요약 제목 */}
         <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold">요약</span>
+            <span className="w-[100px] h-[35px] bg-[#FFFBCA] rounded-full text-[14px] font-bold font-['Noto_Sans'] flex items-center justify-center">
+            요약
+            </span>
         </div>
-            {/* <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm whitespace-pre-wrap text-left">
-                <br />
-                {summaryItems.map((item, idx) => (
-                <div key={idx} className="mb-3">
-                    <strong>{item.category}</strong><br />
-                    {item.category === '처리하는 개인정보 항목'
-                    ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
-                    : item.summary_content}
-                </div>
-                ))}
-            </div> */}
-            <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm whitespace-pre-wrap text-left">
+
+        {/* 요약 내용 */}
+        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
             {summaryItems
-                // .filter(item =>
-                // item.category === '개인정보 처리 목적' ||
-                // item.category === '처리하는 개인정보 항목' ||
-                // wantedPhrases.includes(item.category)
-                // )
-                .filter(item =>
+            .filter(item =>
                 ['개인정보의 처리 목적', '처리하는 개인정보의 항목'].includes(item.category.trim()) ||
                 wantedPhrases.some(phrase =>
-                    item.category.trim().normalize() === phrase.trim().normalize()
+                item.category.trim().normalize() === phrase.trim().normalize()
                 )
-                )
-                .map((item, idx) => (
+            )
+            .map((item, idx) => (
                 <div key={idx} className="mb-3">
-                    <strong>{item.category}</strong><br />
-                    {item.category === '처리하는 개인정보의 항목'
+                <strong>{item.category}</strong><br />
+                {item.category === '처리하는 개인정보의 항목'
                     ? highlightMatchedTerms(item.summary_content, userPrivacyItems)
                     : item.summary_content}
                 </div>
-                ))}
-            </div>
+            ))}
+        </div>
+        </div>
          </>
                 )}
         </div>

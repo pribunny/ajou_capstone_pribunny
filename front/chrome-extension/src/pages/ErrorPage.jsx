@@ -7,14 +7,21 @@ export default function ErrorPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { source, code, message } = location.state || {
-    source: '알 수 없음',
-    code: 'NO_ERROR',
-    message: '에러 정보가 전달되지 않았습니다.',
-  };
+  console.log("에러페이비!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+  // const { source, code, message } = location.state || {
+  //   source: '알 수 없음',
+  //   code: 'NO_ERROR',
+  //   message: '에러 정보가 전달되지 않았습니다.',
+  // };
+  const {
+    source = '알 수 없음',
+    code = 'NO_ERROR',
+    message = '에러 정보가 전달되지 않았습니다.'
+  } = location.state || {};
 
   return (
-    <div className="relative w-[360px] h-[420px] mx-auto mt-10 bg-white rounded-2xl shadow-lg p-6 text-center flex flex-col items-center justify-start overflow-hidden">
+    <div className="relative w-[360px] h-[460px] mx-auto mt-10 bg-white rounded-2xl shadow-lg p-6 text-center flex flex-col items-center justify-start overflow-hidden">
       {/* 🐰 배경 토끼 이미지 (크게, 흐리게) */}
       <img
         src={BunnyImage}

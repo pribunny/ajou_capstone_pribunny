@@ -66,52 +66,63 @@ export default function SettingAddPhrase() {
   };
 
   return (
-    <div className="w-[360px] h-[420px] mx-auto mt-20 bg-white rounded-2xl shadow-lg p-6 text-center flex flex-col items-center justify-center">
-      <h2 className="text-center text-xl font-bold mb-2">PRIBUNNY</h2>
+    <div className="w-[360px] h-[460px] mx-auto bg-[#FFFDEB] rounded-2xl shadow-lg p-4 flex flex-col">
 
-      {/* 상단 버튼 */}
-      <div className="flex justify-center gap-4 mb-2">
-        <button
-          className="bg-primary w-10 h-10 rounded-full flex items-center justify-center shadow hover:bg-primary/80 transition"
-          onClick={() => navigate('/setting')}
-        >
-          <img src={BackIcon} alt="Back" className="w-6 h-6" />
+      {/* 상단 바 */}
+      <div className="relative flex items-center justify-center h-[40px] mb-1">
+        {/* 뒤로가기 */}
+        <button onClick={() => navigate('/setting')} className="absolute left-0 w-[26px] h-[26px]">
+          <img src={BackIcon} alt="Back" className="w-[26px] h-[26px]" />
         </button>
-        <button
-          className="bg-secondary w-10 h-10 rounded-full flex items-center justify-center shadow hover:bg-secondary/80 transition"
-          onClick={() => navigate('/')}
-        >
-          <img src={HomeIcon} alt="Home" className="w-6 h-6" />
+
+        {/* 제목 */}
+        <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
+          PRIBUNNY
+        </h2>
+
+        {/* 홈 버튼 */}
+        <button onClick={() => navigate('/')} className="absolute right-0 w-[26px] h-[26px]">
+          <img src={HomeIcon} alt="Home" className="w-[26px] h-[26px]" />
         </button>
       </div>
+
+      {/* 구분선 */}
+      <div className="w-full h-[1px] bg-black mb-4" />
 
       {/* 설명 */}
-      <p className="text-sm text-center text-gray-700 mb-2">
-        추가로 더 보고 싶은 개인정보처리방침 항목을 선택해주세요!
-      </p>
+        <p className="mt-6 text-[16px] font-semibold font-['Noto_Sans'] text-center text-gray-700">
+          추가로 더 보고 싶은 개인정보처리방침 항목을<br/>
+          선택해주세요!
+        </p>
 
-      {/* 체크박스 목록 */}
-      <div className="border rounded-lg p-3 h-40 overflow-y-auto mb-4 text-sm text-left">
-        {phrases.map((item) => (
-          <label key={item} className="block mb-2">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={selectedPhrases.includes(item)}
-              onChange={() => togglePhrase(item)}
-            />
-            {item}
-          </label>
-        ))}
-      </div>
+        {/* 체크박스 목록 */}
+        <div className="mt-10 flex flex-col items-center">
+          <div className="w-[328px] h-[188px] border border-gray-300 rounded-none p-3 overflow-y-auto mb-6 text-left bg-white text-[14px] font-medium font-['Noto_Sans']">
+            {phrases.map((item) => (
+              <label key={item} className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center w-[18px] h-[18px] flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    className="w-[18px] h-[18px] appearance-none border border-gray-400 rounded-none checked:bg-pink-500 checked:after:content-['✔'] checked:after:block checked:after:text-white checked:after:text-[14px] checked:after:text-center checked:after:leading-[16px]"
+                    checked={selectedPhrases.includes(item)}
+                    onChange={() => togglePhrase(item)}
+                  />
+                </div>
+                <span className="text-[14px] font-medium font-['Noto_Sans'] leading-snug">
+                  {item}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
 
-      {/* 저장 버튼 */}
-      <button
-        onClick={handleSave}
-        className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center shadow hover:bg-blue-600 transition"
-      >
-        <img src={SaveIcon} alt="저장하기" className="w-8 h-8" />
-      </button>
+          {/* 저장 버튼 */}
+          <button
+            onClick={handleSave}
+            className="w-[120px] h-[36px] bg-[#F9D5D9] text-[16px] font-bold font-['Noto_Sans'] rounded-[12px] text-black shadow hover:bg-[#f7c8cc] transition mx-auto"
+          >
+            저장하기
+          </button>
     </div>
   );
 }
