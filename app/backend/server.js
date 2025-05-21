@@ -37,9 +37,9 @@ app.use("/api/unfairDetect", unfairDetectRoutes);
 const presignRoutes = require("./routes/presign")
 app.use("/api/files/presign", presignRoutes);
 
-// 추출 라우터
-const extractRoutes = require("./routes/extract")
-app.use("/api/extract", extractRoutes);
+// 웹페이지 분석 라우터
+const analyzeRoutes = require("./routes/analyze")
+app.use("/api/analyze", analyzeRoutes);
 
 // prod/dev 모두 HTTP 서버 실행
 app.listen(PORT, HOST, () => {

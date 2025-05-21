@@ -63,7 +63,7 @@ const summarizeController = async (req, res) => {
     
       } 
       else if (data_size === 'short') {
-        paragraphs = [sanitizedHtml];
+        paragraphs = summaryText
       } else {
         return res.status(400).json({
           success: false,
