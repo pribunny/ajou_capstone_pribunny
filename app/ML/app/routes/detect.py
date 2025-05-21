@@ -22,7 +22,7 @@ class DetectRequest(BaseModel):
 class DetectItem(BaseModel):
     category: str
     context: List[str]
-    detectItems: Dict[str, Any]
+    detectItems: List[Dict[str, Any]]
 
 class DetectData(BaseModel):
     documentId: str
