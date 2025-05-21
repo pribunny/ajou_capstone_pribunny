@@ -64,7 +64,7 @@ const summarizeController = async (req, res) => {
       } 
       else if (data_size === 'short') {
         paragraphs = [sanitizedHtml];
-      } elwqse {
+      } else {
         return res.status(400).json({
           success: false,
           code: 'INVALID_DATASIZE',
