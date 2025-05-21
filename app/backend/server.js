@@ -33,6 +33,10 @@ app.use("/api/summary", summarizeRoutes);
 const unfairDetectRoutes = require("./routes/unfairdetect")
 app.use("/api/unfairDetect", unfairDetectRoutes);
 
+// presigned url 라우터
+const presignRoutes = require("./routes/presign")
+app.use("/api/files/presign", presignRoutes);
+
 // 추출 라우터
 const extractRoutes = require("./routes/extract")
 app.use("/api/extract", extractRoutes);
