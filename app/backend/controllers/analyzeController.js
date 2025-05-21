@@ -84,20 +84,10 @@ const analyzeController = async (req, res) => {
       }
 
       markdown = modelResponse.data.text;
-      paragraphs = splitMarkdownToParagraphs(markdown);  // PDF일 때도 문단 분리 필요
-
     } else {
       const ocrResult = await Tesseract.recognize(fileBuffer, 'kor', { logger: () => {} });
       const extractedText = ocrResult.data.text;
-
       markdown = convertToMarkdown(extractedText);
-      paragraphs = splitMarkdownToParagraphs(markdown);
-      console.log(paragraphs);  
-
-      console.log('paragraphs:', paragraphs);
-      console.log('isArray:', Array.isArray(paragraphs));
-      console.log('paragraphs length:', paragraphs.length);
-      console.log('paragraphs[0] type:', typeof paragraphs[0]);
     }
 
     // 3. 요약 API 호출
