@@ -12,38 +12,44 @@ export default function ResultUnfairDetail() {
 
 
   return (
-    <div className="w-[360px] h-[500px] mx-auto mt-4 bg-white rounded-2xl shadow-lg p-4 flex flex-col">
-      {/* 상단 타이틀 */}
-      <h2 className="text-center text-xl font-bold mb-2">PRIBUNNY</h2>
+    <div className="w-[360px] h-[460px] mx-auto bg-[#FFFDEB] rounded-2xl shadow-lg p-4 flex flex-col">
+    {/* ✅ 상단 타이틀 & 버튼 */}
+    <div className="relative flex items-center justify-center h-[40px]">
+    <button onClick={() => navigate('/setting')} className="absolute left-0 w-[26px] h-[26px]">
+        <img src={SetIcon} alt="Setting" className="w-[26px] h-[26px]" />
+    </button>
+    <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
+        PRIBUNNY
+    </h2>
+    <button onClick={() => navigate('/')} className="absolute right-0 w-[26px] h-[26px]">
+        <img src={HomeIcon} alt="Home" className="w-[26px] h-[26px]" />
+    </button>
+    </div>
+    {/* ✅ 구분선 */}
+    <div className="w-full h-[1px] bg-black mb-2" />
 
-      {/* 상단 버튼 영역 */}
-      <div className="flex justify-center gap-4 mb-2">
-        <button onClick={() => navigate('/setting')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-          <img src={SetIcon} alt="Setting" className="w-6 h-6" />
+      {/* 뒤로가기 + 출력 전체 묶음 - 스크롤 가능 */}
+      <div className="w-full flex-1 overflow-y-auto mt-2 px-1">
+
+        {/* 뒤로가기 버튼 */}
+        <button
+          onClick={() => navigate(-1)}
+          className="w-[31px] h-[31px] bg-transparent flex items-center justify-center mb-3"
+        >
+          <img src={BackIcon} alt="뒤로가기" className="w-[31px] h-[31px]" />
         </button>
-        <button onClick={() => navigate('/')} className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-          <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-        </button>
-      </div>
 
-      {/* 뒤로가기 버튼 - 이미지 사용 */}
-      <button
-        onClick={() => navigate(-1)}
-        className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-3"
-      >
-      <img src={BackIcon} alt="뒤로가기" className="w-5 h-5" />
-      </button>
-
-      {/* 독소조항 상세내용 영역 */}
-      <div className="border rounded-lg p-2 h-40 overflow-y-auto text-sm text-left">
-        {unfairItems.map((item, idx) => (
-          <div key={idx} className="mb-4">
-            <strong className="block mb-1">{item.category}</strong>
-            {item.detect_content.split('\n').map((line, i) => (
-              <p key={i} className="m-0 p-0 leading-snug">{line}</p>
-            ))}
-          </div>
-        ))}
+        {/* 상세 내용 */}
+        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
+          {unfairItems.map((item, idx) => (
+            <div key={idx} className="mb-3">
+              <strong className="block mb-1">{item.category}</strong>
+              {item.detect_content.split('\n').map((line, i) => (
+                <p key={i} className="m-0 p-0 leading-snug">{line}</p>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
