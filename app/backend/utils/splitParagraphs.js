@@ -15,7 +15,7 @@ const splitParagraphs = (markdownText) => {
     const startIdx = matches[i].index;
     const endIdx = (i + 1 < matches.length) ? matches[i + 1].index : markdownText.length;
 
-    const paragraphBlock = markdownText.slice(startIdx, endIdx).trim();
+    let paragraphBlock = markdownText.slice(startIdx, endIdx).trim();
     paragraphBlock = paragraphBlock.replace(/\s*\n\s*/g, ' '); 
 
     if (!paragraphBlock) continue;
