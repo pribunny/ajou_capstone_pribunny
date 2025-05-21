@@ -5,7 +5,6 @@ const path = require('path');
 const https = require('https');
 const convertToMarkdown = require('../utils/convertToMarkdown');
 const streamToBuffer = require('../utils/streamToBuffer');
-const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
