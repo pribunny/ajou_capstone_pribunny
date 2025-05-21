@@ -161,6 +161,6 @@ const summarizeController = async (req, res) => {
 const generateDocumentId = () => {
   const randomStr = Math.random().toString(36).substring(2, 8);
   return `doc-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${randomStr}`;
-;
+};
 
 module.exports = summarizeController;
