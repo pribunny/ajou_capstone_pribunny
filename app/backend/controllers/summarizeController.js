@@ -64,6 +64,9 @@ const summarizeController = async (req, res) => {
       } 
       else if (data_size === 'short') {
         paragraphs = summaryText
+        console.log('paragraphs:', paragraphs);
+        console.log('paragraphs isArray:', Array.isArray(paragraphs));
+        console.log('paragraphs length:', paragraphs.length);
       } else {
         return res.status(400).json({
           success: false,
