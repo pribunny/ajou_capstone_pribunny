@@ -2,6 +2,8 @@ const htmlToMarkdown = require('../utils/htmlToMarkdown');
 const splitParagraphs = require('../utils/splitParagraphs');
 const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
+const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
+
 
 const modelServerUrl = process.env.MODEL_SERVER_IP
 
@@ -60,13 +62,9 @@ const summarizeController = async (req, res) => {
         const markdownText = htmlToMarkdown(sanitizedHtml);
         //console.log('📄 변환된 Markdown:', markdownText);  // ✅ 추가된 로그
         paragraphs = splitParagraphs(markdownText);
-    
       } 
       else if (data_size === 'short') {
-        paragraphs = summaryText
-        console.log('paragraphs:', paragraphs);
-        console.log('paragraphs isArray:', Array.isArray(paragraphs));
-        console.log('paragraphs length:', paragraphs.length);
+        paragraphs = splitMarkdownToParagraphs(summaryText);
       } else {
         return res.status(400).json({
           success: false,
