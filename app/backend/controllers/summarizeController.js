@@ -95,8 +95,10 @@ const summarizeController = async (req, res) => {
       
       modelResponse = await axios.post(
         `http://${modelServerUrl}/llm/summaries`,
-
-        
+        {
+          documentId,
+          contexts: paragraphs
+        },        
         { headers: { 'Content-Type': 'application/json' } }
       );
       console.log('\n✅ 📥 모델 응답 수신 완료');
