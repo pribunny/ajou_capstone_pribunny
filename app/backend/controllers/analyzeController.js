@@ -89,6 +89,9 @@ const analyzeController = async (req, res) => {
         return errorResponse(res, 'OCR_FAIL', 'OCR에서 텍스트를 추출하지 못했습니다.', 500);
       }
       markdown = convertToMarkdown(extractedText);
+        if (!markdown || markdown.trim() === '') {
+        return errorResponse(res, 'MARKDOWN_CONVERT_FAIL', '텍스트 변환 후 결과가 비어있습니다.', 500);
+      }
     }
 
     // 3. 요약 API 호출

@@ -65,7 +65,7 @@ const unfairDetectController = async (req, res) => {
         //  console.log(`📄 문단 ${i + 1}:\n${p}\n`);
         });
       } else if (data_size === 'short') {
-        paragraphs = splitMarkdownToParagraphs(summaryText);
+        paragraphs = splitMarkdownToParagraphs(detectText);
       } else {
         return res.status(400).json({
           success: false,
