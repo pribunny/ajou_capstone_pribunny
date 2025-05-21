@@ -64,7 +64,7 @@ const summarizeController = async (req, res) => {
       } 
       else if (data_size === 'short') {
         paragraphs = [sanitizedHtml];
-      } else {
+      } elwqse {
         return res.status(400).json({
           success: false,
           code: 'INVALID_DATASIZE',
@@ -95,8 +95,10 @@ const summarizeController = async (req, res) => {
       
       modelResponse = await axios.post(
         `http://${modelServerUrl}/llm/summaries`,
-
-        
+	{
+		documentId,
+		contexts: paragraphs
+	},        
         { headers: { 'Content-Type': 'application/json' } }
       );
       console.log('\n✅ 📥 모델 응답 수신 완료');
@@ -128,8 +130,8 @@ const summarizeController = async (req, res) => {
     }
 
     const finalResults = responseData.results.map(item => ({
-      category: item.category,
-      summaryItems: item.summaryItems
+  	category: item.category,
+ 	summaryItems: item.summaryItems
     }));
 
     const finalResponse = {
@@ -159,6 +161,6 @@ const summarizeController = async (req, res) => {
 const generateDocumentId = () => {
   const randomStr = Math.random().toString(36).substring(2, 8);
   return `doc-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${randomStr}`;
-};
+;
 
 module.exports = summarizeController;
