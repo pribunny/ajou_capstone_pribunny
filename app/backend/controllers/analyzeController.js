@@ -67,7 +67,6 @@ const analyzeController = async (req, res) => {
     }
 
     let markdown = '';
-    let paragraphs = [];
 
     if (mimeByMagic === 'pdf') {
       const modelServerUrl = `http://${process.env.MODEL_SERVER_IP}:8000/extract-text`;
@@ -84,8 +83,11 @@ const analyzeController = async (req, res) => {
 
       markdown = modelResponse.data.text;
     } else {
-      const ocrResult = await Tesseract.recognize(fileBuffer, 'kor', { logger: () => {} });
-      const extractedText = ocrResult.data.text;
+      const ocrResult = await Tesseract.recognize(fileBuffer, 'kor+eng', { logger: () => {} });
+      const extractedText = ocrResult?.data?.text?.trim();
+      if (!extractedText) {
+        return errorResponse(res, 'OCR_FAIL', 'OCR에서 텍스트를 추출하지 못했습니다.', 500);
+      }
       markdown = convertToMarkdown(extractedText);
     }
 
@@ -93,7 +95,7 @@ const analyzeController = async (req, res) => {
     const summaryResponse = await axios.post(
       'https://pribuddy.shop/api/summary?data_size=short',
       {
-        summaryText: paragraphs,
+        summaryText: markdown,
         checkText: markdown,
       },
       { httpsAgent: new https.Agent({ rejectUnauthorized: false }) }
@@ -109,7 +111,7 @@ const analyzeController = async (req, res) => {
     const detectResponse = await axios.post(
       'https://pribuddy.shop/api/unfairDetect?data_size=short',
       {
-        detectText: paragraphs,
+        detectText: markdown,
         checkText: markdown,
       },
       { httpsAgent: new https.Agent({ rejectUnauthorized: false }) }
@@ -122,22 +124,11 @@ const analyzeController = async (req, res) => {
     }
 
     // 5. 결과 통합
-    const summaryResults = summaryResponse.data.result || [];
-    const detectResults = detectResponse.data.result || [];
+    const summaryResults = summaryResponse.data.data.results;
+    const detectResults = detectResponse.data.data.results;
 
-    // category별로 detectItems를 병합하는 함수
-    const mergedResults = summaryResults.map((summaryCategory) => {
-      // detectResults에서 같은 category를 찾는다
-      const detectCategory = detectResults.find(
-        (detectItem) => detectItem.category === summaryCategory.category
-      );
-
-      return {
-        category: summaryCategory.category,
-        summaryItems: summaryCategory.summaryItems || [],
-        detectItems: detectCategory ? detectCategory.detectItems : null,
-      };
-    });
+    // summaryResults와 detectResults를 순서 유지하며 그대로 이어붙음
+    const mergedResults = [...summaryResults, ...detectResults];
 
     // 6. 통합 결과 반환
     return res.status(200).json({
@@ -146,7 +137,7 @@ const analyzeController = async (req, res) => {
       message: '모든 요약 및 탐지 결과를 성공적으로 통합했습니다.',
       responseTime: new Date().toISOString(),
       data: {
-        documentId: summaryResponse.data.documentId || null,
+        documentId: summaryResponse.data.data.documentId,
         results: mergedResults,
       },
     });

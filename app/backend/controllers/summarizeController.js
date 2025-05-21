@@ -4,7 +4,6 @@ const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
 const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
 
-
 const modelServerUrl = process.env.MODEL_SERVER_IP
 
 const summarizeController = async (req, res) => {

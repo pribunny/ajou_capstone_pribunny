@@ -2,6 +2,8 @@ const htmlToMarkdown = require('../utils/htmlToMarkdown');
 const splitParagraphs = require('../utils/splitParagraphs');
 const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
+const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
+
 const modelServerUrl = process.env.MODEL_SERVER_IP
 
 const unfairDetectController = async (req, res) => {
@@ -63,7 +65,7 @@ const unfairDetectController = async (req, res) => {
         //  console.log(`📄 문단 ${i + 1}:\n${p}\n`);
         });
       } else if (data_size === 'short') {
-        paragraphs = [sanitizedHtml];
+        paragraphs = splitMarkdownToParagraphs(summaryText);
       } else {
         return res.status(400).json({
           success: false,
