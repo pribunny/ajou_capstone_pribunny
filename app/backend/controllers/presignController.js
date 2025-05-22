@@ -9,42 +9,77 @@ const s3Client = new S3Client({
   },
 });
 
+// 허용된 Content-Type 목록
+const allowedContentTypes = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+];
+
 exports.generatePresignedUrl = async (req, res) => {
   const { filename, contentType } = req.body;
 
-  if (!filename || !contentType) {
+  if (
+    !Array.isArray(filename) ||
+    !Array.isArray(contentType) ||
+    filename.length !== contentType.length ||
+    filename.length > 5
+  ) {
     return res.status(400).json({
       success: false,
       code: "BAD_REQUEST",
-      message: "filename and contentType are required",
+      message: "filename and contentType must be arrays of the same length, max 5 items",
       responseTime: new Date().toISOString(),
       data: null,
     });
   }
 
-  const command = new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME,
-    Key: filename,
-    ContentType: contentType,
-  });
-
   try {
-    const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-    console.log("Generated presigned URL:", uploadURL);
+    // PDF 또는 이미지 형식만 필터링
+    const filtered = filename
+      .map((name, index) => ({
+        filename: name,
+        contentType: contentType[index],
+      }))
+      .filter(file => allowedContentTypes.includes(file.contentType));
+
+    if (filtered.length === 0) {
+      return res.status(400).json({
+        success: false,
+        code: "NO_VALID_FILES",
+        message: "Only PDF or image files are allowed",
+        responseTime: new Date().toISOString(),
+        data: null,
+      });
+    }
+
+    const uploadURLs = await Promise.all(
+      filtered.map(file => {
+        const command = new PutObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: file.filename,
+          ContentType: file.contentType,
+        });
+        return getSignedUrl(s3Client, command, { expiresIn: 60 });
+      })
+    );
 
     return res.json({
       success: true,
       code: "SUCCESS",
-      message: "Pre-signed URL generated successfully",
+      message: "Pre-signed URLs generated successfully",
       responseTime: new Date().toISOString(),
-      data: { uploadURL },
+      data: {
+        uploadURL: uploadURLs,
+      },
     });
   } catch (error) {
     console.error("S3 presign error:", error);
     return res.status(500).json({
       success: false,
       code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to generate presigned URL",
+      message: "Failed to generate presigned URLs",
       responseTime: new Date().toISOString(),
       data: null,
     });

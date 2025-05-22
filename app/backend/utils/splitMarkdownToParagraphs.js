@@ -7,10 +7,9 @@ function splitMarkdownToParagraphs(input) {
   lines.forEach(line => {
     const trimmedLine = line.trim();
 
-    // ### 로 시작하면 문단 분리
-    if (trimmedLine.startsWith('### ')) {
+    // #, ##, ### ... 등 헤더가 있으면 문단 분리
+    if (/^#{1,6} /.test(trimmedLine)) {
       if (currentParagraph.trim()) {
-        // 변수 값을 배열에 넣음
         paragraphs.push(currentParagraph.trim());
       }
       currentParagraph = trimmedLine;
@@ -19,7 +18,6 @@ function splitMarkdownToParagraphs(input) {
     }
   });
 
-  // 마지막 문단 처리
   if (currentParagraph.trim()) {
     paragraphs.push(currentParagraph.trim());
   }

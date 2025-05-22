@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-// 요약 API 로직을 담당하는 컨트롤러 불러오기
-const summarizeText = require("../controllers/summarizeController");
+// 컨트롤러에서 함수 구조분해 할당으로 받아오기
+const { summarizeController } = require("../controllers/summarizeController");
 
-// 요약 API 경로
-router.post("/", summarizeText);
+// POST 요청 처리 시 함수 넘기기
+router.post("/", summarizeController);
 
 module.exports = router;
-
