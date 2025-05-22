@@ -15,7 +15,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const allowedOrigins = [
 	'chrome-extension://nofobkjhcapphbgeicmaopenpbolafom',
 	'chrome-extension://pphphoncbnbdkkoafcjpapppffkgklip',
-	'http://localhost',
+	'http://localhost:1573',
 	'http://127.0.0.1:3000',
 ];
 
