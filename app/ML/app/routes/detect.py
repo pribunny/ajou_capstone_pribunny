@@ -66,12 +66,17 @@ async def detect_unfair_clause(request: DetectRequest):
 
         logger.info(f"탐지 실행 id: {doc_id}")
 
-        tasks = [
-            detect_paragraph(cat, paras)
-            for cat, paras in category_to_contexts.items()
-        ]
+        # tasks = [
+        #     detect_paragraph(cat, paras)
+        #     for cat, paras in category_to_contexts.items()
+        # ]
+        #
+        # results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = []
+        for cat, paras in category_to_contexts.items():
+            result = await detect_paragraph(cat, paras)
+            results.append(result)
 
         detect_data = DetectData(
             documentId=doc_id,

@@ -66,6 +66,11 @@ async def summarize_privacy_policy(request: SummaryRequest):
             for cat, paras in category_to_contexts.items()
         ]
 
+        results = []
+        for cat, paras in category_to_contexts.items():
+            result = await summarize_paragraph(cat, paras)
+            results.append(result)
+
         results = await asyncio.gather(*tasks)
 
         summary_data = SummaryData(
