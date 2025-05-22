@@ -59,6 +59,10 @@ app.use("/api/unfairDetect", unfairDetectRoutes);
 const presignRoutes = require("./routes/presign")
 app.use("/api/files/presign", presignRoutes);
 
+// txt presigned url 라우터
+const txtpresignRoutes = require("./routes/txtpresign")
+app.use("/api/text/presign", txtpresignRoutes);
+
 // 웹페이지 분석 라우터
 const analyzeRoutes = require("./routes/analyze")
 app.use("/api/analyze", analyzeRoutes);
