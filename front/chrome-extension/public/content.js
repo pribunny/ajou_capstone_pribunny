@@ -19,10 +19,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("📨 요청 받음 → 텍스트 전송");
         chrome.runtime.sendMessage({
             action: "take_full_data",
-            source : {
-                html: document.body.outerHTML, //body HTML 데이터 가져오기
-                text: document.body.innerText //body 텍스트 데이터 가져오기
-            }
+            source : document.body.outerHTML, //body HTML 데이터 가져오기
         });
     }
 });
@@ -361,7 +358,19 @@ function showResult(summary, detect){
 
     //detect.data.result의 각각 items에 대해 detectItems.isUnfair의 값이 true인 경우만 배열에 담도록 -> itmes를
     // 불공정 조항만 필터링
-    const unfair_result = detect.data.results.filter(item => item.detectItems.isUnfair === true);
+    const unfair_result = [];
+
+    detect.data.results.forEach(item => {
+    if (Array.isArray(item.detectItems)) {
+        const unfairItems = item.detectItems.filter(di => di.isUnfair === true);
+        if (unfairItems.length > 0) {
+        unfair_result.push({
+            category: item.category,
+            detectItems: unfairItems
+        });
+        }
+    }
+    });
     console.log("불공정 조항 데이터 필터링 결과 : ", unfair_result);
 
     if (unfair_result.length === 0) {
@@ -371,45 +380,47 @@ function showResult(summary, detect){
         detect_all_elements.appendChild(detect_element);
     } else {
         unfair_result.forEach(item => {
-            // 개별 조항 컨테이너
             const item_container = document.createElement('div');
             item_container.style.marginBottom = '1em';
 
             const detect_category = document.createElement('span');
             const rawCategory = item.category;
-            const readableCategory = categoryNameMap[rawCategory] || rawCategory;  // 매핑 없으면 원래 값 그대로
+            const readableCategory = categoryNameMap[rawCategory] || rawCategory;
             detect_category.textContent = readableCategory;
             detect_category.style.fontWeight = 'bold';
             detect_category.style.display = 'block';
-
-            const detect_content = document.createElement('div');
-            detect_content.style.wordBreak = 'break-word';
-            detect_content.style.overflowWrap = 'break-word';
-            detect_content.style.whiteSpace = 'normal';
-            detect_content.style.maxWidth = '100%';
-
-            const detect_Statement = document.createElement('span');
-            detect_Statement.textContent = `문제 진술: ${item.detectItems.problemStatement}`;
-            detect_Statement.style.display = 'block';
-
-            const detect_reason = document.createElement('span');
-            detect_reason.textContent = `이유: ${item.detectItems.reason}`;
-            detect_reason.style.display = 'block';
-
-            const detect_legalBasis = document.createElement('span');
-            detect_legalBasis.textContent = `법적 근거: ${item.detectItems.legalBasis}`;
-            detect_legalBasis.style.display = 'block';
-
-            detect_content.appendChild(detect_Statement);
-            detect_content.appendChild(detect_reason);
-            detect_content.appendChild(detect_legalBasis);
-
             item_container.appendChild(detect_category);
-            item_container.appendChild(detect_content);
-            detect_element.appendChild(item_container); // 전체 wrapper에 추가
-        });
 
-        detect_all_elements.appendChild(detect_element); // 마지막에 한 번만 append
+            item.detectItems.forEach(subItem => {
+                const detect_content = document.createElement('div');
+                detect_content.style.wordBreak = 'break-word';
+                detect_content.style.whiteSpace = 'normal';
+                detect_content.style.maxWidth = '100%';
+                // detect_content.style.padding = '8px 12px';
+
+                const detect_Statement = document.createElement('span');
+                detect_Statement.textContent = `문제 진술: ${subItem.problemStatement}`;
+                detect_Statement.style.display = 'block';
+
+                const detect_reason = document.createElement('span');
+                detect_reason.textContent = `이유: ${subItem.reason}`;
+                detect_reason.style.display = 'block';
+
+                const detect_legalBasis = document.createElement('span');
+                detect_legalBasis.textContent = `법적 근거: ${subItem.legalBasis}`;
+                detect_legalBasis.style.display = 'block';
+
+                detect_content.appendChild(detect_Statement);
+                detect_content.appendChild(detect_reason);
+                detect_content.appendChild(detect_legalBasis);
+                item_container.appendChild(detect_content);
+            });
+
+            detect_element.appendChild(item_container);
+            });
+
+            detect_all_elements.appendChild(detect_element);
+
     }
 
 
@@ -464,7 +475,6 @@ function showResult(summary, detect){
             const readableCategory = categoryNameMap[rawCategory] || rawCategory;  // 매핑 없으면 원래 값 그대ro!
             const summary_category = document.createElement('span');
             summary_category.textContent = readableCategory;
-
 
             const summary_content = document.createElement('p');
             summary_content.style.wordBreak = 'break-word';
