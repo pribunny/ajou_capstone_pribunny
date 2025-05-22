@@ -1,5 +1,7 @@
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const path = require("path");
+const crypto = require("crypto");
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -9,7 +11,6 @@ const s3Client = new S3Client({
   },
 });
 
-// 허용된 Content-Type 목록
 const allowedContentTypes = [
   "application/pdf",
   "image/png",
@@ -20,18 +21,6 @@ const allowedContentTypes = [
 exports.generatePresignedUrl = async (req, res) => {
   const { filename, contentType } = req.body;
 
-  // 필수 파라미터 누락 검사
-  if (!filename || !contentType) {
-    return res.status(400).json({
-      success: false,
-      code: "MISSING_PARAMETERS",
-      message: "filename and contentType are required",
-      responseTime: new Date().toISOString(),
-      data: null,
-    });
-  }
-
-  // 배열 형식, 길이 제한 검사
   if (
     !Array.isArray(filename) ||
     !Array.isArray(contentType) ||
@@ -48,10 +37,8 @@ exports.generatePresignedUrl = async (req, res) => {
   }
 
   try {
-    // Content-Type 형식 검사 및 필터링
     const filtered = filename
-      .map((name, index) => ({
-        filename: name,
+      .map((_, index) => ({
         contentType: contentType[index],
       }))
       .filter(file => allowedContentTypes.includes(file.contentType));
@@ -66,32 +53,40 @@ exports.generatePresignedUrl = async (req, res) => {
       });
     }
 
-    // presigned URL 생성
-    const uploadURLs = await Promise.all(
-      filtered.map(file => {
+    const results = await Promise.all(
+      filtered.map(async (file) => {
+        const ext = file.contentType.includes('pdf') ? '.pdf' :
+                    file.contentType.includes('png') ? '.png' :
+                    '.jpg'; // default fallback
+        const randomKey = `${crypto.randomUUID()}${ext}`;
         const command = new PutObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: file.filename,
+          Key: randomKey,
           ContentType: file.contentType,
         });
-        return getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+        const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+        return {
+          key: randomKey,
+          uploadURL: url,
+        };
       })
     );
 
-    return res.json({
-      success: true,
-      code: "SUCCESS",
-      message: "Pre-signed URLs generated successfully",
-      responseTime: new Date().toISOString(),
-      data: {
-        uploadURL: uploadURLs,
-      },
-    });
+    // ✅ 원하는 형태로 변환
+    const response = {
+      key: results.map(r => r.key),
+      uploadURL: results.map(r => r.uploadURL),
+    };
+
+    return res.json(response);
+
   } catch (error) {
     console.error("S3 presign error:", error);
     return res.status(500).json({
       success: false,
-      code: "S3_PRESIGN_FAILED",
+      code: "INTERNAL_SERVER_ERROR",
       message: "Failed to generate presigned URLs",
       responseTime: new Date().toISOString(),
       data: null,
