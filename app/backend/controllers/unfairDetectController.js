@@ -200,7 +200,7 @@ const detectInternal = async (detectText, data_size) => {
   let modelResponse;
   try {
     modelResponse = await axios.post(
-      `http://${modelServerUrl}/llm/detects`,
+      `http://${modelServerUrl}/llm/unfairDetects`,
       {
         documentId,
         contexts: paragraphs
