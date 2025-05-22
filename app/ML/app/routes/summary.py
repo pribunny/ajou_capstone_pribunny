@@ -61,17 +61,17 @@ async def summarize_privacy_policy(request: SummaryRequest):
 
         logger.info(f"요약 실행 id: {doc_id}")
 
-        # tasks = [
-        #     summarize_paragraph(cat, paras)
-        #     for cat, paras in category_to_contexts.items()
-        # ]
-        #
-        # results = await asyncio.gather(*tasks)
+        tasks = [
+            summarize_paragraph(cat, paras)
+            for cat, paras in category_to_contexts.items()
+        ]
 
-        results = []
-        for cat, paras in category_to_contexts.items():
-            result = await summarize_paragraph(cat, paras)
-            results.append(result)
+        results = await asyncio.gather(*tasks)
+
+        # results = []
+        # for cat, paras in category_to_contexts.items():
+        #     result = await summarize_paragraph(cat, paras)
+        #     results.append(result)
 
         summary_data = SummaryData(
             documentId=doc_id,
