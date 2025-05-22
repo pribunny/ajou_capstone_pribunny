@@ -1,10 +1,7 @@
 import axios from 'axios';
 const apiClient = axios.create({
-    baseURL: 'https://pribuddy.shop',//process.env.REACT_APP_API_BASE_URL, // 공통 URL 설정
-    headers: {
-    'Content-Type': 'application/json'  // ✅ 명시적으로 설정
-    },
-    //timeout: 5000, // 요청 제한 시간
+    baseURL: 'http://localhost:8000',//process.env.REACT_APP_API_BASE_URL, // 공통 URL 설정
+    timeout: 5000, // 요청 제한 시간
 });
 // Axios 요청/응답 로깅 설정
 apiClient.interceptors.request.use((config) => {

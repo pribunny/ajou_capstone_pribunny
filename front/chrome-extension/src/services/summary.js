@@ -2,8 +2,8 @@
 
 import apiClient from './apiClient';
 
-const USE_MOCK = true;
-// const USE_MOCK = false;
+//const USE_MOCK = true;
+ const USE_MOCK = false;
 
 
 export const getSummarize = async (input_data, split) => {
@@ -38,8 +38,8 @@ export const getSummarize = async (input_data, split) => {
 
   try {
     const response = await apiClient.post(
-      '/api/summary',
-    // '/api/summary-error',
+//      '/api/summary',
+     '/api/summary-error',
       {
         summaryText : input_data.html,
         checkText : input_data.text

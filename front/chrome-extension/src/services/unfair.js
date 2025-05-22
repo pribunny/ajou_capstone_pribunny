@@ -7,15 +7,15 @@
 
 // 요약 API의 주소를 보면 /api/summary? 형식이다. ?의 경우 query params를 나타내는 것임
 import apiClient from './apiClient';
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export const getUnfairDetect = async (input_data, split) => {
   if (USE_MOCK) {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          documentId: 'def123',
-          results: [
+          unfairId: 'def123',
+          unfairItems: [
             {
               category: '개인정보 처리 목적',
               detect_content: 
@@ -38,12 +38,48 @@ export const getUnfairDetect = async (input_data, split) => {
             //   `
             // }
           ]
+            // "success": true,
+            // "code": "SUCCESS",
+            // "message": "모든 탐지 결과를 성공적으로 통합했습니다.",
+            // "responseTime": "2025-05-12T13:35:00.000000",
+            // "data": {
+            //   "documentId": "abc123",
+            //   "results": [
+            //           {
+            //               "category": "collectedItems",
+            //               "detectItems": {
+            //                   "isUnfair": true,
+            //                   "problemStatement": "회사는 고객의 이름, 생년월일을 수집합니다.",
+            //                   "reason": "개인정보처리방침에는 개인정보 처리 목적, 항목, 보유 기간, 파기 절차, 안전조치, 정보주체 권리, 보호책임자, 변경 이력을 반드시 포함해야 합니다. 그러나 해당 조항은 개인정보의 수집 목적, 보유 기간, 파기 절차 등을 명시하지 않고 있습니다. 따라서 개인정보처리방침은 개인정보의 수집 목적, 보유 기간, 파기 절차 등을 구체적으로 명시하여 작성되어야 합니다.",
+            //                   "legalBasis": "개인정보보호법 제6조 및 개인정보처리방침 작성 가이드라인"
+            //               }
+            //           },
+            //           {
+            //               "category": "thirdPartySharing",
+            //               "detectItems": {
+            //                   "isUnfair": true,
+            //                   "problemStatement": "제3자에게 광고 목적으로 정보를 제공할 수 있습니다.",
+            //                   "reason": "이 조항은 개인정보를 제3자에게 제공할 때 필요한 필수 정보를 누락하고 있습니다. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인에 따르면, 제3자 제공 시 '제공받는 자', '제공 목적', '제공 항목', '보유 및 이용 기간'을 명시해야 하며, 수집·이용동의서에는 동의를 거부할 권리가 있다는 사실 및 동의 거부에 따른 불이익이 있는 경우 그 내용을 포함해야 합니다. 따라서, 개인정보처리방침은 제공받는 자, 목적, 항목, 보유기간을 명확히 작성해야 하며, 수집·이용동의서는 동의 거부 권리 및 불이익 내용을 포함하여 작성되어야 합니다.",
+            //                   "legalBasis": "개인정보 보호법 제18조 및 개인정보처리방침 및 수집·이용동의서 작성 가이드라인"
+            //               }
+            //           },
+            //           {
+            //               "category": "privacyOfficerInfo",
+            //               "detectItems": {
+            //                   "isUnfair": true,
+            //                   "problemStatement": "개인정보 보호책임자는 고객 문의를 처리합니다.",
+            //                   "reason": "해당 조항은 개인정보 보호책임자의 역할에 대한 정보를 충분히 제공하지 않고 있습니다. 개인정보 보호책임자는 고객 문의를 처리하는 것 외에도 개인정보 보호와 관련한 고충처리 및 상담을 실제로 처리할 수 있는 연락처를 공개해야 합니다. 개인정보처리방침은 개인정보 보호책임자의 성명, 부서의 명칭, 전화번호 등 연락처를 명확히 기재하고, 개인정보 보호와 관련한 고충처리 및 상담을 실제로 처리할 수 있는 연락처를 포함하여 작성되어야 합니다.",
+            //                   "legalBasis": "제22조(개인정보 보호책임자의 공개) 및 개인정보처리방침 작성 가이드라인"
+            //               }
+            //           }
+            //     ]
+            // }
         });
       }, 2000); // 2초 지연
     });
   }
   try{
-      const response = await apiClient.post('/api/unfair',
+      const response = await apiClient.post('/api/unfairDetect',
       {
         detectText : input_data.html,
         checkText : input_data.text

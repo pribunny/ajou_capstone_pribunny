@@ -12,13 +12,35 @@ const app = express();
 const PORT = process.env.API_PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// 미들웨어
-app.use(cors());
+const allowedOrigins = [
+	'chrome-extension://nofobkjhcapphbgeicmaopenpbolafom',
+	'chrome-extension://pphphoncbnbdkkoafcjpapppffkgklip',
+	'http://localhost:3000',
+	'http://127.0.0.1:3000',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+// 요청 로깅 미들웨어
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} from ${req.headers.origin || 'unknown origin'}`);
+  next();
+});
+
 app.use(express.json());
 
 // 헬스 체크 라우터 (ALB 상태 확인용)
-app.get("/health", (req, res) => {
-    res.status(200).send("OK");
+app.get("/", (req, res) => {
+    res.status(200).send("Hello, world");
 });
 
 // 라우터

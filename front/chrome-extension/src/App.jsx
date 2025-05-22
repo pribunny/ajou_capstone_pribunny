@@ -7,7 +7,8 @@ import SettingPage from './pages/SettingPage'
 import ResultUnfairDetail from './pages/ResultUnfairDetail';
 import ErrorPage from './pages/ErrorPage';
 import SettingAddPhrase from './pages/SettingAddPhrase';   
-import SettingAddPrivacy from './pages/SettingAddPrivacy'; 
+import SettingAddPrivacy from './pages/SettingAddPrivacy';
+import ResultSummaryDetail from './pages/ResultSummaryDetail'; // 경로에 따라 조정 필요 
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/setting/settingaddphrase" element={<SettingAddPhrase />} /> 수정
           <Route path="/setting/settingaddprivacy" element={<SettingAddPrivacy />} /> 수정
           <Route path="/start/resultdetail" element={<ResultUnfairDetail />} />
+          <Route path="/start/resultsummarydetail" element={<ResultSummaryDetail />} />
           <Route path="/error" element={<ErrorPage />} />
 
       </Routes>

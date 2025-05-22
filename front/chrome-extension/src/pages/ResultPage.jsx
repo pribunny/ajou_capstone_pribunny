@@ -49,6 +49,8 @@ export default function ResultPage() {
              return;
         }
 
+        console.log("fjeirfjifj ", htmlSource);
+        console.log("fjeirfjifj ", htmlSource.html);
         const cleanHTML = DOMPurify.sanitize(htmlSource.html); // 데이터를 한 번 정제해서 보낸다. + 수정함
         console.log('정제된 데이터 : ', cleanHTML);
         const cleanText = DOMPurify.sanitize(htmlSource.text); //추가함
@@ -63,7 +65,25 @@ export default function ResultPage() {
             try {
                 const data = await getSummarize(cleanData, 'long'); //수정
                 setSummaryId(data.summaryId);
+                // setSummaryId(data.documentId);
+
                 setSummaryItems(data.summaryItems);
+
+                // const flatSummaryItems = data.results.flatMap(result =>
+                //     result.summaryItems.map(item => ({
+                //         category: item.category_name,
+                //         summary_content: item.summarize_content
+                //     }))
+                // );
+                // const flatSummaryItems = (data.results || []).flatMap(result =>
+                //     (result.summaryItems[0] || []).map(item => ({
+                //         category: item.category_name,
+                //         summary_content: item.summarize_content
+                //     }))
+                // );
+
+
+                // setSummaryItems(flatSummaryItems);
             } catch (error) {
                 console.error('요약실패', error);
                 navigate('/error', {
@@ -73,14 +93,23 @@ export default function ResultPage() {
                     message: error.message || '알 수 없는 에러가 발생했습니다.'
                 }
                 });
-            }
+                }
             };
 
         const loadUnfair = async () => {
         try {
             const data = await getUnfairDetect(cleanData, 'long'); //수정
             setUnfairId(data.unfairId);
+            // setUnfairId(data.documentId || '');
+
             setUnfairItems(data.unfairItems);
+            // const flatUnfairItems = data.results.map(result => ({
+            //     category: result.category,
+            //     ...result.detectItems
+            // }));
+
+            // setUnfairItems(flatUnfairItems);
+            // setUnfairItems(data.results || []);
         } catch (error) {
             console.error('불공정약관탐지실패', error);
             navigate('/error', {
@@ -97,6 +126,7 @@ export default function ResultPage() {
         loadUnfair(); // 함수 이름도 맞춰서 호출
     }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
 
+    // 스토리지에서 개인정보 항목 가져오는 함수
     useEffect(() => {
     chrome.storage.local.get(['privacySelections'], (result) => {
         if (result.privacySelections?.items) {
@@ -105,15 +135,16 @@ export default function ResultPage() {
     });
     }, []);
 
+    // 개인정보 항목 표시하는 함수
     function highlightMatchedTerms(text, terms) {
-    if (!terms || terms.length === 0) return text;
+        if (!terms || terms.length === 0) return text;
 
-    const pattern = new RegExp(`(${terms.join('|')})`, 'gi');
-    const parts = text.split(pattern);
+        const pattern = new RegExp(`(${terms.join('|')})`, 'gi');
+        const parts = text.split(pattern);
 
-    return parts.map((part, idx) =>
-        terms.includes(part) ? <strong key={idx}>{part}</strong> : part
-    );
+        return parts.map((part, idx) =>
+            terms.includes(part) ? <strong key={idx}>{part}</strong> : part
+        );
     }
 
     useEffect(() => {
@@ -184,6 +215,14 @@ export default function ResultPage() {
             <span className="w-[100px] h-[35px] bg-[#FFFBCA] rounded-full text-[14px] font-bold font-['Noto_Sans'] flex items-center justify-center">
             요약
             </span>
+            <button
+                onClick={() => navigate('resultsummarydetail', {
+                    state: { summaryId, summaryItems }
+                })}
+                className="w-[100px] h-[35px] bg-[#F9D5D9] rounded-full text-[14px] font-bold font-['Noto_Sans'] flex items-center justify-center hover:bg-[#bdd8fc] transition"
+            >
+                더보기
+            </button>
         </div>
 
         {/* 요약 내용 */}
