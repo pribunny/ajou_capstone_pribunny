@@ -13,6 +13,7 @@ import App from '../App';
 export default function Home(){
     const navigate = useNavigate();
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [clearInput, setClearInput] = useState(false);
     console.log("선택된 파일 : ", selectedFiles.length);
 
     const handleUpload = async() => {
@@ -22,38 +23,44 @@ export default function Home(){
                 return;
             }
 
-            for(const file of selectedFiles){
-                console.log("file name : ", file.name);
-                console.log("file type : ", file.type);
-                const url = await getPresignedUrl(file.name, file.type);
-                console.log("url : ", url)
+            const fileNames = selectedFiles.map(file => file.name);
+            const fileTypes = selectedFiles.map(file => file.type);
+
+            const { key : keys, uploadURL: urls } = await getPresignedUrl(fileNames, fileTypes);
+            console.log("presigned url : ", urls);
+
+            for (let i = 0; i < selectedFiles.length; i++){
+                const file = selectedFiles[i];
+                const url = urls[i];
+
                 await uploadToS3(file, url);
-                console.log("서버 전송시작");
-                await notifyServer(file.name, file.type);
             }
 
             console.log("파일 업로드 성공");
-            navigate('/start');
+            navigate('/start', {state : {keys, fileTypes, fileNames}});
 
         }catch(err){
-            console.error(err);
-            alert("업로드 중 오류 발생!");
+            //아 생각해보니까 이거 presigned랑 AWS랑 나눠야하는데 씨앙
+            console.error('업로드 URL(presigned url) 요청 실패 : ', err.message);
+            alert(`업로드 중 오류 발생!\n${err.message}`);
+            setSelectedFiles([]);
+            setClearInput(prev => !prev);
         }
     };
 
     return (
         <div className="bg-yellow-01 w-screen h-screen flex flex-col items-center justify-center">
             <div className='text-center mb-4 mt-6'>
-                <h2 className='text-3xl font-bold py-2'>PRIBUNNY</h2>
-                <p className='py-2'>개인정보처리방침 및 수집이용동의서 분석 및 요약 서비스</p>
+                <h2 className='text-3xl font-bold py-2 text-black'>PRIBUNNY</h2>
+                <p className='py-2 text-black'>개인정보처리방침 및 수집이용동의서 분석 및 요약 서비스</p>
             </div>
             <div>
-                <Addfile onFileSelected={setSelectedFiles} />
+                <Addfile onFileSelected={setSelectedFiles} clearTrigger={clearInput} />
                 <div className="flex justify-center m-4">
                     <div className="flex justify-center mt-4">
-                        <button onClick={() => navigate('/start')}
-                            className="w-[150px] h-[50px] bg-yellow-02 rounded-2 flex items-center justify-center gap-2 font-bold">
-                            <img src={StartIcon} alt="start_icon" className="w-[25px] h-[25px]" />
+                        <button onClick = {handleUpload}
+                            className="w-[150px] h-[50px] bg-yellow-02 rounded-2 flex items-center justify-center gap-2 font-bold text-black">
+                            <img src={StartIcon} alt="start_icon" className="w-[25px] h-[25px] " />
                             시작하기
                         </button>
                     </div>

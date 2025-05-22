@@ -8,20 +8,20 @@ const ShowError = ({ message }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-start bg-yellow-01 p-10">
-            <div className='w-full flex items-center justify-center mt-6 relative mb-2'>
-                <h2 className='text-3xl font-bold py-2'>PRIBUNNY</h2>
-                <button className="absolute right-96 "
+        <div className="w-screen min-h-screen flex flex-col items-center justify-start bg-yellow-01 p-6 sm:p-10">
+            <div className='w-full flex justify-center mb-4 relative'>
+                <h2 className='text-2xl sm:text-3xl font-bold text-black'>PRIBUNNY</h2>
+                <button
                     onClick={() => navigate('/')}>
-                    <img src={HomeIcon} alt="home_icon" className="w-[35px] h-[35px]" />
+                    <img src={HomeIcon} alt="home_icon" className="w-8 h-8 sm:w-9 sm:h-9 right-4 md:right-0" />
                 </button>
             </div>
-            <div className=" flex-1 flex flex-col justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center text-black text-center">
                 <img src={ErrorIcon} alt="Error Bunny Img"
-                    className="w-[400px] h-auto mb-4 opacity-40 top-1/2 left-1/2"/>
+                    className="w-full max-w-[280px] sm:max-w-[350px] mb-6 opacity-40"/>
                 <div>
-                    <h3 className="text-2xl font-bold text-center mb-2">{message}</h3>
-                    <p className="text-xl text-center">홈 화면을 눌러 다시 시도해주세요!</p>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">{message}</h3>
+                    <p className="text-base sm:text-xl">홈 화면을 눌러 다시 시도해주세요!</p>
                 </div>
             </div>
         </div>

@@ -5,11 +5,11 @@
     3. 다른 파일 업로드 시 기존에 있던 파일 날리는 초기화 코드 필요
 */
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 import UploadImg from '../assets/upload.png';
 
-const Addfile = ({ onFileSelected }) => {
+const Addfile = ({ onFileSelected, clearTrigger }) => {
     const [imageSrc, setImageSrc] = useState([]);
     const [fileInfoText, setFileInfoText] = useState("");
     const inputRef = useRef(null);
@@ -17,6 +17,12 @@ const Addfile = ({ onFileSelected }) => {
     const MAX_SIZE_MB = 5;
     const MAX_IMAGE_COUNT = 5;
     const ALLOWED_EXTENSIONS = ['pdf', 'jpeg', 'png', 'jpg'];
+
+    useEffect(() => {
+        if(clearTrigger){
+            resetAll();
+        }
+    }, [clearTrigger]);
 
     const resetAll = () => {
         inputRef.current.value = null;
@@ -104,7 +110,7 @@ const Addfile = ({ onFileSelected }) => {
     };
 
     return (
-        <div>
+        <div className="text-black">
             <label htmlFor="add_file"
                 className="bg-yellow-02 rounded-[24px] flex items-center justify-center w-[500px] h-[150px] gap-4 px-6 font-bold">
                 <img src={UploadImg} alt="upload_img" className="w-[35px] h-[35px]" />
