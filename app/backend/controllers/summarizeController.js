@@ -11,57 +11,57 @@ const modelServerUrl = process.env.MODEL_SERVER_IP;
 // ✅ 내부 처리 함수
 const summarizeInternal = async (summaryText, data_size) => {
   const documentId = generateDocumentId();
-  // let paragraphs = [];
+  let paragraphs = [];
 
-  // if (data_size === 'long') {
-  //   const bucketName = process.env.S3_BUCKET_NAME_TXT;
-  //   const key = summaryText;
-  //   let plainText;
+  if (data_size === 'long') {
+    const bucketName = process.env.S3_BUCKET_NAME_TXT;
+    const key = summaryText;
+    let plainText;
 
-  //   try {
-  //     plainText = await getTextFromS3(bucketName, key);
-  //     console.log("plainText: ", plainText)
-  //     await deleteS3Object(bucketName, key);
-  //     console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
-  //   } catch (error) {
-  //     throw {
-  //       success: false,
-  //       code: 'S3_FETCH_ERROR',
-  //       message: error.message || 'S3에서 텍스트 파일을 가져오는 중 오류가 발생했습니다.',
-  //       responseTime: new Date().toISOString()
-  //     };
-  //   }
+    try {
+      plainText = await getTextFromS3(bucketName, key);
+      console.log("plainText: ", plainText)
+      await deleteS3Object(bucketName, key);
+      console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
+    } catch (error) {
+      throw {
+        success: false,
+        code: 'S3_FETCH_ERROR',
+        message: error.message || 'S3에서 텍스트 파일을 가져오는 중 오류가 발생했습니다.',
+        responseTime: new Date().toISOString()
+      };
+    }
 
-  //   try {
-  //     const sanitizedHtml = DOMPurify.sanitize(plainText);
-  //     const markdownText = htmlToMarkdown(sanitizedHtml);
-  //     console.log("markdownText: ", markdownText)
-  //     paragraphs = splitParagraphs(markdownText);
-  //   } catch (error) {
-  //     throw {
-  //       success: false,
-  //       code: 'HTML_PROCESSING_ERROR',
-  //       message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
-  //       responseTime: new Date().toISOString()
-  //     };
-  //   }
-  // }
-   let paragraphs = [];
-    const sanitizedHtml = DOMPurify.sanitize(summaryText);
+    try {
+      const sanitizedHtml = DOMPurify.sanitize(plainText);
+      const markdownText = htmlToMarkdown(sanitizedHtml);
+      console.log("markdownText: ", markdownText)
+      paragraphs = splitParagraphs(markdownText);
+    } catch (error) {
+      throw {
+        success: false,
+        code: 'HTML_PROCESSING_ERROR',
+        message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
+        responseTime: new Date().toISOString()
+      };
+    }
+  }
+  //  let paragraphs = [];
+  //   const sanitizedHtml = DOMPurify.sanitize(summaryText);
 
-    if (data_size === 'long') {
-      try {
-        const markdownText = htmlToMarkdown(sanitizedHtml);
-        paragraphs = splitParagraphs(markdownText);
-      } catch (error) {
-        return res.status(500).json({
-          success: false,
-          code: 'HTML_PROCESSING_ERROR',
-          message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
-          responseTime: new Date().toISOString()
-        });
-      }
-    }  
+  //   if (data_size === 'long') {
+  //     try {
+  //       const markdownText = htmlToMarkdown(sanitizedHtml);
+  //       paragraphs = splitParagraphs(markdownText);
+  //     } catch (error) {
+  //       return res.status(500).json({
+  //         success: false,
+  //         code: 'HTML_PROCESSING_ERROR',
+  //         message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
+  //         responseTime: new Date().toISOString()
+  //       });
+  //     }
+  //   }  
     
   else if (data_size === 'short') {
     paragraphs = splitMarkdownToParagraphs(summaryText);
