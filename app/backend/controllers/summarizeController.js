@@ -1,5 +1,7 @@
 const htmlToMarkdown = require('../utils/htmlToMarkdown');
 const splitParagraphs = require('../utils/splitParagraphs');
+const getTextFromS3 = require('../utils/getTextFromS3');
+const deleteS3Object = require('../utils/deleteS3Object');
 const axios = require('axios');
 const DOMPurify = require('isomorphic-dompurify');
 const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
@@ -9,21 +11,39 @@ const modelServerUrl = process.env.MODEL_SERVER_IP;
 // ✅ 내부 처리 함수
 const summarizeInternal = async (summaryText, data_size) => {
   const documentId = generateDocumentId();
-
   let paragraphs = [];
-  const sanitizedHtml = DOMPurify.sanitize(summaryText);
 
   if (data_size === 'long') {
+    const bucketName = process.env.S3_BUCKET_NAME_TXT;
+    const key = summaryText;
+    let plainText;
+
     try {
+      plainText = await getTextFromS3(bucketName, key);
+      console.log("plainText: ", plainText)
+      await deleteS3Object(bucketName, key);
+      console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
+    } catch (error) {
+      throw {
+        success: false,
+        code: 'S3_FETCH_ERROR',
+        message: error.message || 'S3에서 텍스트 파일을 가져오는 중 오류가 발생했습니다.',
+        responseTime: new Date().toISOString()
+      };
+    }
+
+    try {
+      const sanitizedHtml = DOMPurify.sanitize(plainText);
       const markdownText = htmlToMarkdown(sanitizedHtml);
+      console.log("markdownText: ", markdownText)
       paragraphs = splitParagraphs(markdownText);
     } catch (error) {
-      return res.status(500).json({
+      throw {
         success: false,
         code: 'HTML_PROCESSING_ERROR',
         message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
         responseTime: new Date().toISOString()
-      });
+      };
     }
   } else if (data_size === 'short') {
     paragraphs = splitMarkdownToParagraphs(summaryText);
@@ -34,7 +54,6 @@ const summarizeInternal = async (summaryText, data_size) => {
   }
 
   let modelResponse;
-  console.log("paragraphs: ", paragraphs)
   try {
     modelResponse = await axios.post(
       `http://${modelServerUrl}/llm/summaries`,
@@ -45,9 +64,7 @@ const summarizeInternal = async (summaryText, data_size) => {
       { headers: { 'Content-Type': 'application/json' } }
     );
 
-     // ✅ 모델 응답 로그 추가
     console.log("✅ 모델 응답 전체:", JSON.stringify(modelResponse.data, null, 2));
-    console.log("✅ 모델 요약 결과 (results):", modelResponse.data?.data?.results);
   } catch (error) {
     const statusCode = error.response?.status || 502;
     const errorMsg = error.response?.data?.message || error.message || '모델 서버 요청 실패';
@@ -77,7 +94,7 @@ const summarizeInternal = async (summaryText, data_size) => {
   };
 };
 
-// ✅ Express 컨트롤러 함수
+// Express 컨트롤러 함수
 const summarizeController = async (req, res) => {
   try {
     const { data_size } = req.query;

@@ -434,10 +434,10 @@ const htmlToMarkdown = (htmlString) => {
   });
 
   // 🔍 확장된 중심 노드 목록 출력
-  console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
-  expandedCenterNodes.forEach((node, idx) => {
-    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
-  });
+  // console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
+  // expandedCenterNodes.forEach((node, idx) => {
+  //   console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+  // });
 
    //중심 노드 제거: excludedMap 기준
   const filteredCenterNodes = expandedCenterNodes.filter(h => {
@@ -446,9 +446,9 @@ const htmlToMarkdown = (htmlString) => {
     const excludedTexts = excludedMap.get(tag);
 
     const shouldExclude = excludedTexts && (excludedTexts.includes('*') || excludedTexts.includes(text));
-    if (shouldExclude) {
-      console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
-    }
+    // if (shouldExclude) {
+    //   console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
+    // }
     return !shouldExclude;
   });
 
