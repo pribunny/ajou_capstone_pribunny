@@ -33,7 +33,9 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["extension_logo.png"],
+      "resources": [
+        "extension_logo.png",
+        "error_icon.png"],
       "matches": ["<all_urls>"]
     }
   ]

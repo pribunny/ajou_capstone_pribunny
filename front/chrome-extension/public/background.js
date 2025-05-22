@@ -14,69 +14,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     console.log('[Background] 서버 요청 데이터 :', drag_text);
 
-    const testMode = true; // ✅ 테스트 모드 on
-
-    if (testMode) { //테스트 코드임
-    const dummySummary = {
-      success: true,
-      code: 'SUCCESS',
-      message: '모든 요약 결과를 성공적으로 통합했습니다.',
-      responseTime: '2025-05-12T13:35:00.000000',
-      data: {
-        documentId: 'abc123',
-        summary: [
-          {
-            category: "개인정보의 처리 및 보유 기간",
-            summary_content: "동의 철회 또는 탈퇴 요청 후 5일 이내 지체 없이 개인정보를 파기합니다."
-          },
-          {
-            category: "기타",
-            summary_content: "무신사 스토어, 29CM 등의 다양한 서비스 정보를 제공하며, 원하지 않을 경우 언제든지 알림 설정을 통해 철회할 수 있습니다. 선택적 개인정보 수집 및 이용은 거부할 수 있으며, 동의하지 않아도 서비스 이용은 가능하지만 혜택 정보 제공은 제한될 수 있습니다."
-          }
-        ]
-      }
-    };
-
-
-
-       const dummyDetect = {
-         success: true,
-         code: 'SUCCESS',
-         message: '탐지된 결과가 없습니다.',
-         responseTime: '2025-05-12T13:35:00.000000',
-         data: {
-           documentId: 'abc123',
-           detect: []
-         }
-       };
-
-
-    const result = {
-      detect: dummyDetect,
-      summary: dummySummary,
-    };
-
-    const error = {
-      summary: null,
-      detect: null,
-    };
-
-    console.log('[Background] 테스트 응답 전송:', { success: true, result, error });
-    sendResponse({ success: true, result, error });
-    return true;
-    } //여기까지 테스트 코드임
-
-    const drag_req_data = {
+    const drag_summary_data = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({drag_text}),
+      body: JSON.stringify({
+        summaryText : drag_text, //이거 배열로 변경하기
+        checkText : drag_text
+      }),
     };
 
-    const summary_req = fetch('./api/summary?datasize=short', drag_req_data) //서버 주소 변경 필요
+    const drag_detect_data = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        detectText : drag_text, //이거 배열로 변경하기
+        checkText : drag_text
+      }),
+    };
+
+    const summary_req = fetch('https://pribuddy.shop/api/summary?data_size=short', drag_summary_data) //서버 주소 변경 필요
         .then(res => res.json());
-    const detect_req = fetch('./api/unfairDetect?datasize=short', drag_req_data) //서버 주소 변경 필요
+    const detect_req = fetch('https://pribuddy.shop/api/unfairDetect?data_size=short', drag_detect_data) //서버 주소 변경 필요
         .then(res => res.json());
 
     Promise.allSettled([summary_req, detect_req])
