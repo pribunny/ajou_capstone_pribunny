@@ -140,5 +140,6 @@ certs/
 
 __pycache__/
 
-# *.traineddata
+*.traineddata
 /DB_setting/
+

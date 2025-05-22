@@ -1,8 +1,19 @@
-# app/backend/Dockerfile.dev.prod
+FROM node:18-bullseye
 
-FROM node:18
+# Python 설치
+RUN apt-get update && apt-get install -y python3 python3-pip
+
 WORKDIR /app
+
+# Node.js 종속성
 COPY package*.json ./
-RUN npm install --omit=dev  # devDependencies 제외
+RUN npm install --omit=dev
+
+# Python 종속성
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# 앱 소스 복사
 COPY . .
+
 CMD ["node", "server.js"]

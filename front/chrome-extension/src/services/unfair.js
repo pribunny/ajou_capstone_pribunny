@@ -86,7 +86,11 @@ export const getUnfairDetect = async (input_data, split) => {
       },
       {params : { data_size: split }}
     );
-      if(response?.status === 200) return response.data.data;
+    console.log("들어옴");
+    if (response?.status === 200){
+      console.log("test : ", response.data);
+      return response.data.data;
+    } 
   }catch(err){
       if(err.response?.status === 400){
           const error = new Error('에러에 관한 설명');
