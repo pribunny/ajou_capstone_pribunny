@@ -44,6 +44,10 @@ const summarizeInternal = async (summaryText, data_size) => {
       },
       { headers: { 'Content-Type': 'application/json' } }
     );
+
+     // ✅ 모델 응답 로그 추가
+    console.log("✅ 모델 응답 전체:", JSON.stringify(modelResponse.data, null, 2));
+    console.log("✅ 모델 요약 결과 (results):", modelResponse.data?.data?.results);
   } catch (error) {
     const statusCode = error.response?.status || 502;
     const errorMsg = error.response?.data?.message || error.message || '모델 서버 요청 실패';

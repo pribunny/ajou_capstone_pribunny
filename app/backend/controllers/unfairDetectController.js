@@ -43,6 +43,8 @@ const detectInternal = async (detectText, data_size) => {
       },
       { headers: { 'Content-Type': 'application/json' } }
     );
+    console.log("✅ 모델 응답 전체:", JSON.stringify(modelResponse.data, null, 2));
+    console.log("✅ 모델 탐지 결과 (results):", modelResponse.data?.data?.results);
   } catch (error) {
     const statusCode = error.response?.status || 502;
     const errorMsg = error.response?.data?.message || error.message || '모델 서버 요청 실패';
