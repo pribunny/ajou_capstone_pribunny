@@ -4,13 +4,17 @@ from typing import Union, List, Dict, Any
 
 def extract_json_from_response(text: str) -> List[Dict[str, Any]]:
     try:
-        match = re.search(r"```json\n(.+?)\n```", text, re.DOTALL)
-        if not match:
-            raise ValueError("JSON 블록을 찾을 수 없습니다.")
+        # 1. ```json ... ``` 블록 우선 탐색
+        match = re.search(r"```json\n?(.*?)\n?```", text, re.DOTALL)
+        if match:
+            json_str = match.group(1).strip()
+        else:
+            # 2. 블록이 없을 경우 전체 문자열 자체를 JSON으로 시도
+            json_str = text.strip()
 
-        json_str = match.group(1).strip()
         parsed = json.loads(json_str)
 
+        # 3. 파싱 결과가 dict이면 리스트로 감싸기
         if isinstance(parsed, dict):
             return [parsed]
         elif isinstance(parsed, list):

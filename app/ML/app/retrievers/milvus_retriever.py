@@ -19,7 +19,7 @@ def search_context(query):
 
     hits = []
     for re in result[0]:
-        print(re)
+        # print(re)
         res = (
             f"[ {re.entity.law_name}, {re.entity.chapter}, {re.entity.section}, {re.entity.clause_title} ]\n"
             f"{re.entity.text}"
