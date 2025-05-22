@@ -9,7 +9,7 @@ if not api_key:
 
 def get_default_llm() -> BaseChatModel:
     return ChatOpenAI(
-        model="gpt-4.1 (long context)",
+        model="gpt-4o-mini",
         api_key=api_key,
         temperature=0.2
     )
