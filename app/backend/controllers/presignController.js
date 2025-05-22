@@ -20,6 +20,18 @@ const allowedContentTypes = [
 exports.generatePresignedUrl = async (req, res) => {
   const { filename, contentType } = req.body;
 
+  // 필수 파라미터 누락 검사
+  if (!filename || !contentType) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_PARAMETERS",
+      message: "filename and contentType are required",
+      responseTime: new Date().toISOString(),
+      data: null,
+    });
+  }
+
+  // 배열 형식, 길이 제한 검사
   if (
     !Array.isArray(filename) ||
     !Array.isArray(contentType) ||
@@ -36,7 +48,7 @@ exports.generatePresignedUrl = async (req, res) => {
   }
 
   try {
-    // PDF 또는 이미지 형식만 필터링
+    // Content-Type 형식 검사 및 필터링
     const filtered = filename
       .map((name, index) => ({
         filename: name,
@@ -54,6 +66,7 @@ exports.generatePresignedUrl = async (req, res) => {
       });
     }
 
+    // presigned URL 생성
     const uploadURLs = await Promise.all(
       filtered.map(file => {
         const command = new PutObjectCommand({
@@ -78,7 +91,7 @@ exports.generatePresignedUrl = async (req, res) => {
     console.error("S3 presign error:", error);
     return res.status(500).json({
       success: false,
-      code: "INTERNAL_SERVER_ERROR",
+      code: "S3_PRESIGN_FAILED",
       message: "Failed to generate presigned URLs",
       responseTime: new Date().toISOString(),
       data: null,
