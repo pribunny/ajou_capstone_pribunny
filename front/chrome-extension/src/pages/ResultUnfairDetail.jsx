@@ -57,7 +57,7 @@ export default function ResultUnfairDetail() {
 
         {/* 뒤로가기 버튼 */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/start')}
           className="w-[31px] h-[31px] bg-transparent flex items-center justify-center mb-3"
         >
           <img src={BackIcon} alt="뒤로가기" className="w-[31px] h-[31px]" />

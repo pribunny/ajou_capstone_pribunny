@@ -2,8 +2,8 @@
 
 import apiClient from './apiClient';
 
-//const USE_MOCK = true;
- const USE_MOCK = false;
+// const USE_MOCK = true;
+const USE_MOCK = false;
 
 
 export const getSummarize = async (input_data, split) => {
@@ -34,19 +34,61 @@ export const getSummarize = async (input_data, split) => {
         },
       ],
     };
+    // return{
+    //     "success": true,
+    //     "code": "SUCCESS",
+    //     "message": "모든 요약 결과를 성공적으로 통합했습니다.",
+    //     "responseTime": "2025-05-12T13:35:00.000000",
+    //     "data": {
+    //           "documentId": "adb123",
+    //           "results": [
+    //               {
+    //                   "category": "collectedItems",
+    //                   "summaryItems": [
+    //                       {
+    //                           "category_name": "처리하는 개인정보의 항목",
+    //                           "summarize_content": "회사는 고객의 이름과 생년월일을 수집합니다."
+    //                       }
+    //                   ]
+    //               },
+    //               {
+    //                   "category": "thirdPartySharing",
+    //                   "summaryItems": [
+    //                       {
+    //                           "category_name": "기타",
+    //                           "summarize_content": "소제목: 제3자 정보 제공\n회사는 광고 목적으로 정보를 제3자에게 제공할 수 있습니다."
+    //                       }
+    //                   ]
+    //               },
+    //               {
+    //                   "category": "privacyOfficerInfo",
+    //                   "summaryItems": [
+    //                       {
+    //                           "category_name": "개인정보 보호 책임자의 성명 또는 개인정보 업무 담당부서 및 고충사항을 처리하는 부서에 관한 사항",
+    //                           "summarize_content": "개인정보 보호책임자는 고객 문의를 처리합니다."
+    //                       }
+    //                   ]
+    //               }
+    //           ]
+    //         }
+    //   }
   }
 
   try {
+    console.log("!!!!!!!! :", input_data.html);
     const response = await apiClient.post(
-//      '/api/summary',
-     '/api/summary-error',
+      '/api/summary',
       {
         summaryText : input_data.html,
         checkText : input_data.text
       },
       { params: { data_size: split } }
     );
-    if (response?.status === 200) return response.data.data;
+    console.log("들어옴");
+    if (response?.status === 200){
+      console.log("test : ", response.data);
+      return response.data.data;
+    } 
   } catch (err) {
     const status = err.response?.status;
     const error = new Error();
