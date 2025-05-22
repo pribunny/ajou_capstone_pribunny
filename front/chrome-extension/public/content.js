@@ -16,10 +16,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("📨 요청 받음 → 텍스트 전송");
         chrome.runtime.sendMessage({
             action: "take_full_data",
-            source: document.body.outerHTML //body HTML 데이터 가져오기
+            source : {
+                html: document.body.outerHTML, //body HTML 데이터 가져오기
+                text: document.body.innerText //body 텍스트 데이터 가져오기
+            }
         });
-        }
-    });
+    }
+});
 
 // 드래그 부분
 function removeExistingButton() {

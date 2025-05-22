@@ -33,8 +33,9 @@ export default function SettingPageEntry() {
         <div className="mt-20 flex flex-col items-center">
 
           {/* 추가로 더 보고 싶은 항목 */}
-          <div className="text-sm font-medium text-gray-700 text-center mb-2">
-            추가로 더 보고 싶은 개인정보처리방침 항목을 선택해주세요!
+          <div className="text-[18px] font-['Noto_Sans'] font-medium text-gray-700 text-center mb-2">
+            추가로 더 보고 싶은 개인정보처리방침<br/>
+            항목을 선택해주세요!<br/>
           </div>
           <div className="mt-4 flex flex-col items-center"></div>
           <button 
@@ -46,8 +47,9 @@ export default function SettingPageEntry() {
 
           {/* 수집항목 선택 */}
           <div className="mt-6 flex flex-col items-center"></div>
-          <div className="text-sm font-medium text-gray-700 text-center mb-2">
-            제공하고 싶지 않은 수집항목을 선택해주세요!
+          <div className="text-[18px] font-['Noto_Sans'] font-medium text-gray-700 text-center mb-2">
+            제공하고 싶지 않은 수집항목을 <br/>
+            선택해주세요!
           </div>
           <div className="mt-4 flex flex-col items-center"></div>
           <button 
