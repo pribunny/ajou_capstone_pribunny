@@ -14,7 +14,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 const allowedOrigins = [
 	'chrome-extension://nofobkjhcapphbgeicmaopenpbolafom',
-	'chrome-extension://pphphoncbnbdkkoafcjpapppffkgklip'
+	'chrome-extension://pphphoncbnbdkkoafcjpapppffkgklip',
 	'http://localhost:3000',
 	'http://127.0.0.1:3000',
 ];
@@ -29,6 +29,12 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// 요청 로깅 미들웨어
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} from ${req.headers.origin || 'unknown origin'}`);
+  next();
+});
 
 app.use(express.json());
 
