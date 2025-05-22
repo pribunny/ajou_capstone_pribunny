@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
 import HomeIcon from '../assets/home-button.png';
 import { getSummarize } from '../services/summary';
-import { getUnfairDetect } from '../services/unfair'; // ✅ 필요
+import { getUnfairDetect } from '../services/unfair';
+import {getPresigned, uploadToS3} from '../services/uploadFile';
 
 import DOMPurify from 'dompurify'; // XSS 방지를 위함 -> npm install dompurify 해야됩니당
 import Loading from '../components/Loading';
@@ -18,30 +19,7 @@ export default function ResultPage() {
     const [unfairItems, setUnfairItems] = useState([]);
     const [userPrivacyItems, setUserPrivacyItems] = useState([]);
     const [wantedPhrases, setWantedPhrases] = useState([]);
-
-    // ✅ 공통 입력 텍스트 한 번만 선언
-    const testText = `
-    여기에 테스트용 개인정보처리방침 또는 약관 내용을 작성하세요.
-    `;
-
-    useEffect(() => { //html 데이터 불러오는 부분
-        // 현재 탭에 메시지 보내기
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "give_full_data" });
-        });
-
-        // 응답 받을 리스너
-        const handleMessage = (request) => {
-            if (request.action === "take_full_data") {
-                console.log("[ResultPage]받은 텍스트:", request.source);
-                getHtmlSource(request.source);
-            }
-        };
-
-        chrome.runtime.onMessage.addListener(handleMessage);
-        return () => chrome.runtime.onMessage.removeListener(handleMessage);
-
-    }, []);
+    const [key, setKey] = useState("");
 
     // useEffect(() => { //서버로부터 데이터 불러오는 부분
     //     if (!htmlSource){
@@ -110,6 +88,57 @@ export default function ResultPage() {
     //     loadSummary();
     //     loadUnfair(); // 함수 이름도 맞춰서 호출
     // }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
+
+    useEffect(() => {
+            function generateFilename(prefix = 'upload', ext = 'txt') {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+                const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                const random = Math.random().toString(36).substring(2, 8);
+                return `${prefix}_${date}_${time}_${random}.${ext}`;
+            }
+
+            // HTML 데이터 처리 함수
+            const getHtmlSource = async (htmlText) => {
+                try {
+                    // 1. 텍스트 파일 생성
+                    const cleanHTML = DOMPurify.sanitize(htmlText); //여기 content.js 코드 수정하기
+                    const blob = new Blob([cleanHTML], { type: 'text/plain' });
+                    const filename = generateFilename('html', 'txt');
+                    const file = new File([blob], filename, { type: 'text/plain' });
+
+                    // 2. presigned URL 요청
+                    const {key, uploadURL} = await getPresignedUrl(file.name, file.type); // 배열로 보냄
+                    setKey(key);
+
+                    // 3. S3에 업로드
+                    await uploadToS3(file, uploadUrl);
+                    console.log("업로드 완료:", file.name);
+
+                } catch (err) {
+                    console.error("업로드 실패:", err);
+                }
+            };
+
+            // 메시지 리스너 등록
+            const handleMessage = (request) => {
+                if (request.action === "take_full_data") {
+                    console.log("[ResultPage] 받은 텍스트:", request.source);
+                    getHtmlSource(request.source);
+                }
+            };
+
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { action: "give_full_data" });
+            });
+
+            chrome.runtime.onMessage.addListener(handleMessage);
+            return () => chrome.runtime.onMessage.removeListener(handleMessage);
+
+        }, []);
+
+
     useEffect(() => {
         if (!htmlSource) {
             console.log('HTML 데이터 없음');
@@ -126,13 +155,9 @@ export default function ResultPage() {
 
         console.log("📤 HTML source 들어옴, 서버 요청 시작");
 
-        const cleanHTML = DOMPurify.sanitize(htmlSource.html);
-        const cleanText = DOMPurify.sanitize(htmlSource.text);
-        const cleanData = { html: cleanHTML, text: cleanText };
-
         const loadSummary = async () => {
             try {
-            const data = await getSummarize(cleanData, 'long');
+            const data = await getSummarize(key, 'long');
             const { documentId, results } = data;
             setSummaryId(documentId);
             setSummaryItems(results);
@@ -152,7 +177,7 @@ export default function ResultPage() {
 
         const loadUnfair = async () => {
             try {
-            const data = await getUnfairDetect(cleanData, 'long');
+            const data = await getUnfairDetect(key, 'long');
             const { documentId, results } = data;
             setUnfairId(documentId);
             setUnfairItems(results);
@@ -172,7 +197,7 @@ export default function ResultPage() {
 
         loadSummary();
         loadUnfair();
-    }, [htmlSource]);
+    }, [key]);
 
     // 스토리지에서 개인정보 항목 가져오는 함수
     useEffect(() => {

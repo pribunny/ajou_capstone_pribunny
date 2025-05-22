@@ -59,6 +59,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // 비동기 응답 유지
   }
 });
-
-// 오류코드 처리방식 -> 어떤 걸 우선적으로 확인 할 것인가?
-// 아니면 일단 contnet.js로 데이터를 보내고 거기서 오류코드를 처리?
