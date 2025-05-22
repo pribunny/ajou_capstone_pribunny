@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from pymilvus import connections
 from app.routes.summary import summary
 from app.routes.detect import detect
+from app.routes.extract import extract 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +38,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(summary)
 app.include_router(detect)
+app.include_router(extract)
 
 @app.get("/")
 async def root():

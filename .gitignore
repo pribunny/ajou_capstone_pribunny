@@ -139,3 +139,5 @@ certs/
 /capstone.iml
 
 __pycache__/
+
+*.traineddata

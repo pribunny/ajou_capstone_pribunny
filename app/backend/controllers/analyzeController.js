@@ -69,7 +69,7 @@ const analyzeController = async (req, res) => {
     let markdown = '';
 
     if (mimeByMagic === 'pdf') {
-      const modelServerUrl = `http://${process.env.MODEL_SERVER_IP}:8000/extract-text`;
+      const modelServerUrl = `https://${modelServerUrl}/extract-text`;
 
       const modelResponse = await axios.post(
         modelServerUrl,

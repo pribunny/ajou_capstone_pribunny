@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from io import BytesIO
 
 from llama_parse import LlamaParse
 
@@ -20,32 +21,20 @@ def get_parser():
     return parser
 
 
-def parse_pdf_to_md(input_pdf_path, output_md_path):
+def parse_pdf_bytes_to_md(pdf_bytes: bytes) -> str:
     parser = get_parser()
     try:
-        # 페이지별로 분리된 문서 리스트 로드 (각 문서가 페이지 1개)
-        documents = parser.load_data(input_pdf_path)
+        # BytesIO로 감싸서 메모리에서 처리
+        file_like = BytesIO(pdf_bytes)
 
-        page_markdowns = []
-        for i, doc in enumerate(documents):
-            # 각 페이지별 마크다운 텍스트
-            page_md = doc.text
-            page_markdowns.append(page_md)
+        # llama_parse가 BytesIO도 처리할 수 있어야 작동함
+        documents = parser.load_data(file_like)
 
-        # 모든 페이지 마크다운 합치기
-        combined_md = "\n".join(page_markdowns)
-
-        with open(output_md_path, "w", encoding="utf-8") as f:
-            f.write(combined_md)
-
-        print(f"[INFO] Saved combined markdown: {output_md_path}")
+        # 페이지별 마크다운 병합
+        combined_md = "\n".join(doc.text for doc in documents)
+        return combined_md
 
     except Exception as e:
-        print(f"[ERROR] Failed to parse {input_pdf_path}")
+        print(f"[ERROR] Failed to parse PDF bytes")
         print(e)
-
-
-if __name__ == "__main__":
-    input_pdf_path = "sample.pdf"
-    output_md_path = "sample.md"
-    parse_pdf_to_md(input_pdf_path, output_md_path)
+        raise
