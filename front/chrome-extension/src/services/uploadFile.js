@@ -8,7 +8,7 @@ export const getPresigned = async(filename, filetype) => {
                 contentType : filetype
             }
         );
-            if (response?.status === 200) return response.data; //여기 수정 필요함
+            if (response?.status === 200) return response.data.data; //여기 수정 필요함
         } catch (err) {
             const status = err.response?.status;
             const error = new Error();

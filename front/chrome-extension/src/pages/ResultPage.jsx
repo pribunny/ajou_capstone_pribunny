@@ -4,7 +4,7 @@ import SetIcon from '../assets/setting-button.png';
 import HomeIcon from '../assets/home-button.png';
 import { getSummarize } from '../services/summary';
 import { getUnfairDetect } from '../services/unfair';
-import { getPresignedUrl, uploadToS3 } from '../services/uploadFile';
+import { getPresigned, uploadToS3 } from '../services/uploadFile';
 
 import DOMPurify from 'dompurify'; // XSS 방지를 위함 -> npm install dompurify 해야됩니당
 import Loading from '../components/Loading';
@@ -41,12 +41,12 @@ export default function ResultPage() {
                     console.log("[getHtmlSource] 파일 생성 완료 :", file);
 
                     // 2. presigned URL 요청
-                    const {key : key, uploadURL : uploadURL} = await getPresignedUrl(file.name, file.type); // 배열로 보냄
-                    setKey(key);
+                    const {key : key, uploadURL : uploadURL} = await getPresigned(file.name, file.type); // 배열로 보냄
                     console.log("[getPresignedUrl] 생성완료(key, presignedUrl) : ",key, uploadURL );
 
                     // 3. S3에 업로드
-                    await uploadToS3(key, uploadURL);
+
+                    if(await uploadToS3(key, uploadURL)) setKey(key);
                     console.log("업로드 완료:", file.name);
 
                 } catch (err) {
