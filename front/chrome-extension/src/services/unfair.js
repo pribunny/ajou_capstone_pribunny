@@ -81,8 +81,8 @@ export const getUnfairDetect = async (input_data, split) => {
   try{
       const response = await apiClient.post('/api/unfairDetect',
       {
-        detectText : input_data.html,
-        checkText : input_data.text
+        detectText : input_data,
+        checkText : 'text/plain'
       },
       {params : { data_size: split }}
     );

@@ -75,12 +75,11 @@ export const getSummarize = async (input_data, split) => {
   }
 
   try {
-    console.log("!!!!!!!! :", input_data.html);
     const response = await apiClient.post(
       '/api/summary',
       {
-        summaryText : input_data.html,
-        checkText : input_data.text
+        summaryText : input_data,
+        checkText : 'text/plain'
       },
       { params: { data_size: split } }
     );

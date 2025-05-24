@@ -4,15 +4,13 @@ import SetIcon from '../assets/setting-button.png';
 import HomeIcon from '../assets/home-button.png';
 import { getSummarize } from '../services/summary';
 import { getUnfairDetect } from '../services/unfair';
-import {getPresigned, uploadToS3} from '../services/uploadFile';
+import { getPresignedUrl, uploadToS3 } from '../services/uploadFile';
 
 import DOMPurify from 'dompurify'; // XSS 방지를 위함 -> npm install dompurify 해야됩니당
 import Loading from '../components/Loading';
 
-
 export default function ResultPage() {
     const navigate = useNavigate();
-    const [htmlSource, getHtmlSource] = useState("");
     const [summaryId, setSummaryId] = useState("");
     const [summaryItems, setSummaryItems] = useState([]);
     const [unfairId, setUnfairId] = useState("");
@@ -21,74 +19,6 @@ export default function ResultPage() {
     const [wantedPhrases, setWantedPhrases] = useState([]);
     const [key, setKey] = useState("");
 
-    // useEffect(() => { //서버로부터 데이터 불러오는 부분
-    //     if (!htmlSource){
-    //          console.log('HTML 데이터 없음');
-    //          return;
-    //     }
-
-    //     console.log("fjeirfjifj ", htmlSource);
-    //     const cleanHTML = DOMPurify.sanitize(htmlSource.html); // 데이터를 한 번 정제해서 보낸다. + 수정함
-    //     console.log('정제된 데이터 : ', cleanHTML);
-    //     const cleanText = DOMPurify.sanitize(htmlSource.text); //추가함
-    //     console.log('정제된 데이터 : ', cleanText); //추가함
-
-    //     const cleanData = { //추가함
-    //         html : cleanHTML,
-    //         text : cleanText
-    //     };
-
-    //     const loadSummary = async () => {
-    //         try {
-    //             console.log("summary 데이터 전송 : ", cleanData);
-    //             const data = await getSummarize(cleanData, 'long'); //수정
-    //             // setSummaryId(data.summaryId);
-    //             // setSummaryItems(data.summaryItems);
-    //             console.log("load summary 데이터 왔다 : ", data);
-    //             const { documentId, results } = data;
-
-    //             setSummaryId(documentId);     // ✅ documentId → summaryId로 저장
-    //             setSummaryItems(results);     // ✅ results → summaryItems로 저장
-
-    //         } catch (error) {
-    //             console.error('요약실패', error);
-    //             navigate('/error', {
-    //             state: {
-    //                 source: '요약 처리',
-    //                 code: error.code || 'UNKNOWN',
-    //                 message: error.message || '알 수 없는 에러가 발생했습니다.'
-    //             }
-    //             });
-    //             }
-    //         };
-
-    //     const loadUnfair = async () => {
-    //     try {
-    //         const data = await getUnfairDetect(cleanData, 'long'); //수정
-    //         // setUnfairId(data.unfairId);
-    //         // setUnfairItems(data.unfairItems);
-    //         console.log("load unfair 데이터 왔다 : ", data);
-    //         const { documentId, results } = data;
-
-    //         setUnfairId(documentId);        // ← documentId 설정
-    //         setUnfairItems(results);        // ← results 설정
-
-    //     } catch (error) {
-    //         console.error('불공정약관탐지실패', error);
-    //         navigate('/error', {
-    //         state: {
-    //             source: '불공정약관 탐지',
-    //             code: error.code || 'UNKNOWN',
-    //             message: error.message || '알 수 없는 에러가 발생했습니다.'
-    //         }
-    //         });
-    //     }
-    //     };
-
-    //     loadSummary();
-    //     loadUnfair(); // 함수 이름도 맞춰서 호출
-    // }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
-
     useEffect(() => {
             function generateFilename(prefix = 'upload', ext = 'txt') {
                 const now = new Date();
@@ -96,6 +26,7 @@ export default function ResultPage() {
                 const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
                 const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
                 const random = Math.random().toString(36).substring(2, 8);
+                console.log("[generateFilename] 파일 생성중 " );
                 return `${prefix}_${date}_${time}_${random}.${ext}`;
             }
 
@@ -107,17 +38,27 @@ export default function ResultPage() {
                     const blob = new Blob([cleanHTML], { type: 'text/plain' });
                     const filename = generateFilename('html', 'txt');
                     const file = new File([blob], filename, { type: 'text/plain' });
+                    console.log("[getHtmlSource] 파일 생성 완료 :", file);
 
                     // 2. presigned URL 요청
-                    const {key, uploadURL} = await getPresignedUrl(file.name, file.type); // 배열로 보냄
+                    const {key : key, uploadURL : uploadURL} = await getPresignedUrl(file.name, file.type); // 배열로 보냄
                     setKey(key);
+                    console.log("[getPresignedUrl] 생성완료(key, presignedUrl) : ",key, uploadURL );
 
                     // 3. S3에 업로드
-                    await uploadToS3(file, uploadUrl);
+                    await uploadToS3(key, uploadURL);
                     console.log("업로드 완료:", file.name);
 
                 } catch (err) {
                     console.error("업로드 실패:", err);
+
+                    navigate('/error', {
+                        state: {
+                        source: '업로드 실패',
+                        code: err.code || 'UNKNOWN',
+                        message: err.message || '알 수 없는 에러가 발생했습니다.',
+                        },
+                    });
                 }
             };
 
@@ -140,8 +81,8 @@ export default function ResultPage() {
 
 
     useEffect(() => {
-        if (!htmlSource) {
-            console.log('HTML 데이터 없음');
+        if (!key) {
+            console.log('[서버 데이터 요청 부분] key 값이 존재하지 않음');
             return;
         }
 
@@ -153,7 +94,7 @@ export default function ResultPage() {
             return;
         }
 
-        console.log("📤 HTML source 들어옴, 서버 요청 시작");
+        console.log("[서버 데이터 요청 부분] 서버 요청 시작");
 
         const loadSummary = async () => {
             try {
@@ -381,7 +322,7 @@ export default function ResultPage() {
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
         {summaryItems.map((item, idx) => {
             const categoryName = categoryNameMap[item.category];
-            
+
             // ✅ 조건: 사전 정의 항목 + 사용자 설정 항목(wantedPhrases)
             if (
             categoryName !== "개인정보 보호책임자의 성명 또는 개인정보 업무 담당 부서 및 고충사항을 처리하는 부서에 관한 사항" &&
@@ -409,3 +350,71 @@ export default function ResultPage() {
         </div>
     );
 }
+
+// useEffect(() => { //서버로부터 데이터 불러오는 부분
+    //     if (!htmlSource){
+    //          console.log('HTML 데이터 없음');
+    //          return;
+    //     }
+
+    //     console.log("fjeirfjifj ", htmlSource);
+    //     const cleanHTML = DOMPurify.sanitize(htmlSource.html); // 데이터를 한 번 정제해서 보낸다. + 수정함
+    //     console.log('정제된 데이터 : ', cleanHTML);
+    //     const cleanText = DOMPurify.sanitize(htmlSource.text); //추가함
+    //     console.log('정제된 데이터 : ', cleanText); //추가함
+
+    //     const cleanData = { //추가함
+    //         html : cleanHTML,
+    //         text : cleanText
+    //     };
+
+    //     const loadSummary = async () => {
+    //         try {
+    //             console.log("summary 데이터 전송 : ", cleanData);
+    //             const data = await getSummarize(cleanData, 'long'); //수정
+    //             // setSummaryId(data.summaryId);
+    //             // setSummaryItems(data.summaryItems);
+    //             console.log("load summary 데이터 왔다 : ", data);
+    //             const { documentId, results } = data;
+
+    //             setSummaryId(documentId);     // ✅ documentId → summaryId로 저장
+    //             setSummaryItems(results);     // ✅ results → summaryItems로 저장
+
+    //         } catch (error) {
+    //             console.error('요약실패', error);
+    //             navigate('/error', {
+    //             state: {
+    //                 source: '요약 처리',
+    //                 code: error.code || 'UNKNOWN',
+    //                 message: error.message || '알 수 없는 에러가 발생했습니다.'
+    //             }
+    //             });
+    //             }
+    //         };
+
+    //     const loadUnfair = async () => {
+    //     try {
+    //         const data = await getUnfairDetect(cleanData, 'long'); //수정
+    //         // setUnfairId(data.unfairId);
+    //         // setUnfairItems(data.unfairItems);
+    //         console.log("load unfair 데이터 왔다 : ", data);
+    //         const { documentId, results } = data;
+
+    //         setUnfairId(documentId);        // ← documentId 설정
+    //         setUnfairItems(results);        // ← results 설정
+
+    //     } catch (error) {
+    //         console.error('불공정약관탐지실패', error);
+    //         navigate('/error', {
+    //         state: {
+    //             source: '불공정약관 탐지',
+    //             code: error.code || 'UNKNOWN',
+    //             message: error.message || '알 수 없는 에러가 발생했습니다.'
+    //         }
+    //         });
+    //     }
+    //     };
+
+    //     loadSummary();
+    //     loadUnfair(); // 함수 이름도 맞춰서 호출
+    // }, [htmlSource]); //이거 추가해서 htmlSource가 생성되면 실행되도록 한다.
