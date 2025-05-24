@@ -24,6 +24,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
+const fontStyle = document.createElement('style'); //글꼴 - noto Sans
+fontStyle.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+
+    * {
+        font-family: 'Noto Sans KR', sans-serif !important;
+    }
+`;
+document.head.appendChild(fontStyle);
+
+
 // 드래그 부분
 function removeExistingButton() {
   const old = document.getElementById('analyze-button');
@@ -118,6 +129,7 @@ function showLoading(){
 
     //결과 요소 생성하기
     const result = document.createElement('div');
+    result.style.fontFamily = 'Noto Sans KR, sans-serif', //폰트 추가
     result.id = 'result-element';
     result.style.position = 'absolute';
     result.style.top = `${bottomY}px`;
@@ -132,6 +144,7 @@ function showLoading(){
     result.style.borderRadius = '8px';
 
     const loadingMsg = document.createElement('div');
+    loadingMsg.style.fontFamily = 'Noto Sans KR, sans-serif', //폰트 추가
     loadingMsg.textContent = '데이터를 분석하고 있습니다...';
     result.appendChild(loadingMsg);
 
@@ -209,6 +222,7 @@ function showError(error_res) {
 
     result.innerHTML = '';
     //result.style.height = '200px';
+    result.style.fontFamily = 'Noto Sans KR, sans-serif' //폰트 추가
 
     const close_button = document.createElement('span');
     close_button.textContent = '✖';
@@ -289,6 +303,7 @@ function showResult(summary, detect){
     if (!result) return;
 
     result.innerHTML = '';
+    result.style.fontFamily = 'Noto Sans KR, sans-serif' //폰트 추가
 
     //결과 - 닫기 버튼 생성
     const close_button = document.createElement('span');
