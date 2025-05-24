@@ -13,15 +13,19 @@ const summarizeInternal = async (summaryText, data_size) => {
   const documentId = generateDocumentId();
   let paragraphs = [];
 
+  let bucketName, key, plainText;
+  let needToDeleteFromS3 = false;
+
   if (data_size === 'long') {
-    const bucketName = process.env.S3_BUCKET_NAME_TXT;
-    const key = summaryText;
-    let plainText;
+    bucketName = process.env.S3_BUCKET_NAME_TXT;
+    key = summaryText;
+    needToDeleteFromS3 = true;
 
     try {
       plainText = await getTextFromS3(bucketName, key);
       console.log("plainText: ", plainText)
     } catch (error) {
+      await tryDeleteS3(bucketName, key);
       throw {
         success: false,
         code: 'S3_FETCH_ERROR',
@@ -36,6 +40,7 @@ const summarizeInternal = async (summaryText, data_size) => {
       console.log("markdownText: ", markdownText)
       paragraphs = splitParagraphs(markdownText);
     } catch (error) {
+      await tryDeleteS3(bucketName, key);
       throw {
         success: false,
         code: 'HTML_PROCESSING_ERROR',
@@ -44,22 +49,6 @@ const summarizeInternal = async (summaryText, data_size) => {
       };
     }
   }
-  //  let paragraphs = [];
-  //   const sanitizedHtml = DOMPurify.sanitize(summaryText);
-
-  //   if (data_size === 'long') {
-  //     try {
-  //       const markdownText = htmlToMarkdown(sanitizedHtml);
-  //       paragraphs = splitParagraphs(markdownText);
-  //     } catch (error) {
-  //       return res.status(500).json({
-  //         success: false,
-  //         code: 'HTML_PROCESSING_ERROR',
-  //         message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
-  //         responseTime: new Date().toISOString()
-  //       });
-  //     }
-  //   }  
     
   else if (data_size === 'short') {
     paragraphs = splitMarkdownToParagraphs(summaryText);
@@ -82,6 +71,7 @@ const summarizeInternal = async (summaryText, data_size) => {
 
     console.log("✅ 모델 응답 전체:", JSON.stringify(modelResponse.data, null, 2));
   } catch (error) {
+    if (needToDeleteFromS3) await tryDeleteS3(bucketName, key);
     const statusCode = error.response?.status || 502;
     const errorMsg = error.response?.data?.message || error.message || '모델 서버 요청 실패';
     const wrappedError = new Error(`summary 모델 요청 실패: ${errorMsg}`);
@@ -92,20 +82,19 @@ const summarizeInternal = async (summaryText, data_size) => {
 
   const responseData = modelResponse.data?.data;
   if (!responseData || !Array.isArray(responseData.results)) {
+    if (needToDeleteFromS3) await tryDeleteS3(bucketName, key);
     const invalidError = new Error('모델 응답 형식이 잘못되었습니다. (results가 배열이 아님)');
     invalidError.code = 'INVALID_MODEL_RESPONSE';
     invalidError.statusCode = 500;
     throw invalidError;
   }
 
-  // ✅ 모델 응답까지 성공했으므로 여기서 S3 삭제
-  if (data_size === 'long') {
+  if (needToDeleteFromS3) {
     try {
       await deleteS3Object(bucketName, key);
       console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
     } catch (deleteError) {
       console.error(`❌ S3 삭제 실패: ${deleteError.message}`);
-      // 삭제 실패해도 처리 실패는 아님
     }
   }
 
@@ -119,6 +108,16 @@ const summarizeInternal = async (summaryText, data_size) => {
     documentId: responseData.documentId,
     results: finalResults
   };
+};
+
+// S3 삭제 시도용 유틸 함수
+const tryDeleteS3 = async (bucket, key) => {
+  try {
+    await deleteS3Object(bucket, key);
+    console.log(`⚠️ 에러 발생으로 인해 S3 삭제 완료: ${key}`);
+  } catch (err) {
+    console.error(`⚠️ 에러 처리 중 S3 삭제 실패: ${err.message}`);
+  }
 };
 
 // Express 컨트롤러 함수

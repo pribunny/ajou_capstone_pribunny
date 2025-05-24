@@ -42,25 +42,7 @@ const detectInternal = async (detectText, data_size) => {
         responseTime: new Date().toISOString()
       };
     }
-  } 
-  // let paragraphs = [];
-  //   const sanitizedHtml = DOMPurify.sanitize(detectText);
-
-  //   if (data_size === 'long') {
-  //     try {
-  //       const markdownText = htmlToMarkdown(sanitizedHtml);
-  //       paragraphs = splitParagraphs(markdownText);
-  //     } catch (error) {
-  //       return res.status(500).json({
-  //         success: false,
-  //         code: 'HTML_PROCESSING_ERROR',
-  //         message: error.message || 'HTML 처리 중 오류가 발생했습니다.',
-  //         responseTime: new Date().toISOString()
-  //       });
-  //     }
-  //   } 
-
-    
+  }     
   else if (data_size === 'short') {
     paragraphs = splitMarkdownToParagraphs(detectText);
   } else {
