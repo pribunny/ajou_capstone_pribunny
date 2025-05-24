@@ -369,7 +369,9 @@ function showResult(summary, detect){
     const detect_element = document.createElement('div');
     detect_element.style.backgroundColor = '#FFFFFF';
     detect_element.style.border = '1px solid #aaa';
-    detect_element.style.borderRadius = '15px';
+    detect_element.style.borderRadius = '0';
+    detect_element.style.padding = '12px'; // 또는 '16px', '12px 16px' 등으로 여백 지정
+
 
     //detect.data.result의 각각 items에 대해 detectItems.isUnfair의 값이 true인 경우만 배열에 담도록 -> itmes를
     // 불공정 조항만 필터링
@@ -466,7 +468,9 @@ function showResult(summary, detect){
     const summary_element = document.createElement('div');
     summary_element.style.backgroundColor = '#FFFFFF';
     summary_element.style.border = '1px solid #aaa';
-    summary_element.style.borderRadius = '15px';
+    summary_element.style.borderRadius = '0';
+    summary_element.style.padding = '12px'; // 또는 '16px', '12px 16px' 등으로 여백 지정
+
 
     //만약 출력한 데이터가 없다면 -> summary.data.result의 각각 item의 summaryItems[0].summarize_content의 값이 없다면
     // '요약 결과가 없습니다. 개인정보처리방침 및 수집이용동의서가 맞는지 확인해주세요!' 문구 출력
@@ -490,6 +494,7 @@ function showResult(summary, detect){
             const readableCategory = categoryNameMap[rawCategory] || rawCategory;  // 매핑 없으면 원래 값 그대ro!
             const summary_category = document.createElement('span');
             summary_category.textContent = readableCategory;
+            summary_category.style.fontWeight = 'bold'; // ✅ 여기 추가
 
             const summary_content = document.createElement('p');
             summary_content.style.wordBreak = 'break-word';
