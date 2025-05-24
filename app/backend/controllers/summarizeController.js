@@ -21,8 +21,6 @@ const summarizeInternal = async (summaryText, data_size) => {
     try {
       plainText = await getTextFromS3(bucketName, key);
       console.log("plainText: ", plainText)
-      await deleteS3Object(bucketName, key);
-      console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
     } catch (error) {
       throw {
         success: false,
@@ -98,6 +96,17 @@ const summarizeInternal = async (summaryText, data_size) => {
     invalidError.code = 'INVALID_MODEL_RESPONSE';
     invalidError.statusCode = 500;
     throw invalidError;
+  }
+
+  // ✅ 모델 응답까지 성공했으므로 여기서 S3 삭제
+  if (data_size === 'long') {
+    try {
+      await deleteS3Object(bucketName, key);
+      console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
+    } catch (deleteError) {
+      console.error(`❌ S3 삭제 실패: ${deleteError.message}`);
+      // 삭제 실패해도 처리 실패는 아님
+    }
   }
 
   const finalResults = responseData.results.map(item => ({

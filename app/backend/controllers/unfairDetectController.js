@@ -20,8 +20,6 @@ const detectInternal = async (detectText, data_size) => {
     try {
       plainText = await getTextFromS3(bucketName, key);
       console.log("plainText: ", plainText)
-      await deleteS3Object(bucketName, key);
-      console.log(`✅ S3에서 파일 삭제 완료: ${key}`);
     } catch (error) {
       throw {
         success: false,
