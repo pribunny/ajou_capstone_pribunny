@@ -35,10 +35,12 @@ export default function ResultPage() {
                 try {
                     // 1. 텍스트 파일 생성
                     const cleanHTML = DOMPurify.sanitize(htmlText); //여기 content.js 코드 수정하기
+                    console.log("[getHtmlSource] 데이터 받아옴 : ", cleanHTML);
                     const blob = new Blob([cleanHTML], { type: 'text/plain' });
                     const filename = generateFilename('html', 'txt');
                     const file = new File([blob], filename, { type: 'text/plain' });
                     console.log("[getHtmlSource] 파일 생성 완료 :", file);
+                    console.log(await file.text());
 
                     // 2. presigned URL 요청
                     const {key : key, uploadURL : uploadURL} = await getPresigned(file.name, file.type); // 배열로 보냄
@@ -46,7 +48,7 @@ export default function ResultPage() {
 
                     // 3. S3에 업로드
 
-                    if(await uploadToS3(key, uploadURL)) setKey(key);
+                    if(await uploadToS3(file, uploadURL)) setKey(key);
                     console.log("업로드 완료:", file.name);
 
                 } catch (err) {
