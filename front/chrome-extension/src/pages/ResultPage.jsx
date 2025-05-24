@@ -288,7 +288,8 @@ export default function ResultPage() {
                 </p>
             );
             } else {
-            return null;
+            //return null;
+            return <p>탐지된 불공정 조항이 없습니다!</p>;
             }
         })()}
         </div>
@@ -327,8 +328,8 @@ export default function ResultPage() {
 
             // ✅ 조건: 사전 정의 항목 + 사용자 설정 항목(wantedPhrases)
             if (
-            categoryName !== "개인정보 보호책임자의 성명 또는 개인정보 업무 담당 부서 및 고충사항을 처리하는 부서에 관한 사항" &&
-            categoryName !== "개인정보 처리업무 위탁에 관한 사항" &&
+            categoryName !== "개인정보 처리 목적" &&
+            categoryName !== "처리하는 개인정보의 항목" &&
             !wantedPhrases.includes(categoryName)
             ) return null;
 

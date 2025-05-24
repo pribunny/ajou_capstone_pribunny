@@ -75,7 +75,7 @@ export default function ResultUnfairDetail() {
           ))}
         </div> */}
         {/* 상세 내용 */}
-        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
+        {/* <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
           {unfairItems
             .filter(item => Array.isArray(item.detectedItems) && item.detectedItems.some(d => d.isUnfair))
             .map((item, idx) => (
@@ -95,7 +95,37 @@ export default function ResultUnfairDetail() {
                   ))}
               </div>
             ))}
+        </div> */}
+        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
+          {(() => {
+            const filtered = unfairItems.filter(
+              item => Array.isArray(item.detectedItems) && item.detectedItems.some(d => d.isUnfair)
+            );
+
+            if (filtered.length === 0) {
+              return <p className="text-gray-600">탐지된 불공정 조항이 없습니다!</p>;
+            }
+
+            return filtered.map((item, idx) => (
+              <div key={idx} className="mb-4">
+                <strong className="block mb-1 text-base font-semibold">
+                  {categoryNameMap[item.category] || item.category}
+                </strong>
+
+                {item.detectedItems
+                  .filter(d => d.isUnfair)
+                  .map((detect, dIdx) => (
+                    <div key={dIdx} className="mb-2">
+                      <p className="mb-1"><strong>문제 진술:</strong> {detect.problemStatement}</p>
+                      <p className="mb-1"><strong>사유:</strong> {detect.reason}</p>
+                      <p className="mb-1 text-xs text-gray-600"><strong>법적 근거:</strong> {detect.legalBasis}</p>
+                    </div>
+                  ))}
+              </div>
+            ));
+          })()}
         </div>
+
 
       </div>
     </div>
