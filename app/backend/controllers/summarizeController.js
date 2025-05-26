@@ -39,6 +39,10 @@ const summarizeInternal = async (summaryText, data_size) => {
       const markdownText = htmlToMarkdown(sanitizedHtml);
       console.log("markdownText: ", markdownText)
       paragraphs = splitParagraphs(markdownText);
+      paragraphs.forEach((p, i) => {
+        console.log(`--- 문단 ${i + 1} ---`);
+        console.log(p);
+      });
     } catch (error) {
       await tryDeleteS3(bucketName, key);
       throw {
