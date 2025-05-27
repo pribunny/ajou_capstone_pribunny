@@ -402,8 +402,8 @@ function showResult(summary, detect){
     const unfair_result = [];
 
     detect.data.results.forEach(item => {
-        if (Array.isArray(item.detectItems)) {
-            const unfairItems = item.detectItems.filter(di => di.isUnfair === true);
+        if (Array.isArray(item.detectedItems)) {
+            const unfairItems = item.detectedItems.filter(di => di.isUnfair === true);
             unfairItems.forEach(di => {
                 unfair_result.push({
                     category : di.category,
@@ -444,11 +444,11 @@ function showResult(summary, detect){
             detect_Statement.style.display = 'block';
 
             const detect_reason = document.createElement('span');
-            detect_reason.textContent = `이유: ${subItem.reason}`;
+            detect_reason.textContent = `이유: ${item.reason}`;
             detect_reason.style.display = 'block';
 
             const detect_legalBasis = document.createElement('span');
-            detect_legalBasis.textContent = `법적 근거: ${subItem.legalBasis}`;
+            detect_legalBasis.textContent = `법적 근거: ${item.legalBasis}`;
             detect_legalBasis.style.display = 'block';
 
             detect_content.appendChild(detect_Statement);
@@ -485,7 +485,7 @@ function showResult(summary, detect){
     summary_header.appendChild(summary_title);
     summary_all_elements.appendChild(summary_header);
 
-    console.log("[summary 전체 결과] : ", summary.data.results);
+    console.log("[summary 전체 결과] : ", summary.data.result);
 
     const summary_element = document.createElement('div');
     summary_element.style.backgroundColor = '#FFFFFF';
