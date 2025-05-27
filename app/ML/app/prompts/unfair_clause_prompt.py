@@ -7,10 +7,10 @@ unfair_detect_processing_info_template = PromptTemplate(
         "You are a legal assistant tasked with analyzing clauses in a privacy policy to determine whether they contain any legally unfair terms or violations.\n\n"
 
         "The provided Full_clause may contain content related to both of the following categories:\n"
-        "1. 개인정보의 처리 목적 (Purpose of Processing Personal Data)\n"
-        "2. 처리하는 개인정보의 항목 (Items of Personal Data Processed)\n\n"
+        "1. 개인정보의 처리 목적 (processingPurpose)\n"
+        "2. 처리하는 개인정보의 항목 (collectedItems)\n\n"
 
-        "You must evaluate each category **separately** and return a JSON result **for each category**. If both are present, return two JSON objects in a list.\n\n"
+        "You must evaluate each category **separately** and return a JSON result **for each category**. If both are present, return two JSON objects (not in a list).\n\n"
 
         "Each analysis must be based on:\n"
         "- 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 시행령, 표준지침 등\n"
@@ -18,46 +18,43 @@ unfair_detect_processing_info_template = PromptTemplate(
 
         "### 판단 원칙:\n"
         "- context에 포함된 법 조항을 위반한 경우,\n"
-        "  → 관련 법 조항과 작성 가이드라인을 매핑하여 다음 형식으로 작성하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n"
+        "  → 관련 법 조항과 작성 가이드라인을 매핑하여 다음 문장 형식으로 reason을 작성하십시오:\n"
+        "  개인정보처리방침은 ~~하게 작성되어야 합니다.\n"
         "- 반드시 위 문장을 포함한 서술형 reason을 작성하십시오 (단순 나열 금지)\n"
-        "- '동의함'이 기본값인 경우도 위반으로 간주합니다.\n\n"
+        "- '동의함'이 기본값으로 설정된 경우도 위반으로 간주합니다.\n\n"
 
         "### 축약 표현 예외 규칙:\n"
-        "- 아래 표현은 구체적으로 작성된 것으로 간주되어 위반이 아닙니다:\n"
+        "- 다음 표현은 구체적으로 작성된 것으로 간주되어 위반이 아닙니다:\n"
         "  - “아이디, 비밀번호, 이름, 생년월일, 성별, 휴대전화번호 수집합니다”\n"
         "  - “선택항목으로 본인확인 이메일주소 수집합니다”\n"
-        "  → '수집합니다'가 있어도 항목이 명확히 나열되어 있으면 문제 없음\n"
-        "- '선택항목'이라는 표현은 선택 여부를 나타내는 것으로, 구체성을 해치지 않음\n"
-        "- 축약 표현은 '~등', '~기타', '기타 필요한 정보', '이 외 정보' 등\n"
-        "- 이러한 축약이 포함되지 않았다면 isUnfair: false로 판단하십시오\n\n"
+        "  → '수집합니다'라는 표현이 포함되었어도 항목이 명확히 나열되어 있다면 문제되지 않습니다.\n"
+        "- '선택항목'이라는 표현은 구체성을 해치지 않으며, 단일 항목도 명확히 기재되면 허용됩니다.\n"
+        "- 축약 표현에는 '~등', '~기타', '기타 필요한 정보', '이 외 정보' 등이 포함됩니다.\n"
+        "- 이러한 표현이 없다면 isUnfair: false로 판단하십시오.\n\n"
 
         "### 작성 가이드라인:\n"
         "[1] 개인정보의 처리 목적:\n"
-        "- 목적은 명확하고 구체적으로 작성해야 하며, '~등'으로 모호하게 표현하면 안 됩니다.\n"
-        "- 고유식별정보는 별도 동의 또는 법적 근거 필요 (개인정보 보호법 제24조제1항)\n\n"
+        "- 목적은 구체적이어야 하며, '~등'과 같은 모호한 표현을 사용하지 않아야 합니다.\n"
+        "- 고유식별정보 처리 시에는 별도의 동의 또는 법적 근거가 필요합니다 (개인정보 보호법 제24조제1항).\n\n"
         "[2] 처리하는 개인정보의 항목:\n"
-        "- 항목은 구체적으로 작성해야 하며 '~등', '기타' 등의 축약 표현은 위반\n"
-        "- 정보주체의 동의 없이 처리하는 항목은 그 근거와 함께 별도 구분\n"
-        "- 수집 목적에 따라 항목을 명시하고, 자동 수집 항목도 명확히 작성해야 함\n\n"
+        "- 개인정보 항목은 '~등', '~기타' 등으로 축약하지 말고 구체적으로 기재해야 합니다.\n"
+        "- 정보주체의 동의 없이 수집하는 개인정보는 별도 기재하고 법적 근거를 명시해야 합니다.\n"
+        "- 자동 수집 항목도 업무 및 항목을 명확히 작성해야 합니다.\n\n"
 
         "### Full_clause:\n{question}\n\n"
         "### Context (법적 기준):\n{context}\n\n"
 
         "### 응답 형식:\n"
         "항목이 모두 문제가 없는 경우:\n"
-    
         "  {{\"category\": \"processingPurpose\", \"isUnfair\": false}},\n"
         "  {{\"category\": \"collectedItems\", \"isUnfair\": false}}\n"
         "\n"
-
         "항목 중 하나라도 위반이 있을 경우:\n"
-
         "  {{\n"
         "    \"category\": \"processingPurpose\",\n"
         "    \"isUnfair\": true,\n"
         "    \"problemStatement\": \"<문제가 되는 문장>\",\n"
-        "    \"reason\": \"<문제 설명>\",\n"
+        "    \"reason\": \"개인정보처리방침은 ~~하게 작성되어야 합니다.\",\n"
         "    \"legalBasis\": \"<법령 근거>\"\n"
         "  }},\n"
         "  {{\n"
@@ -65,8 +62,9 @@ unfair_detect_processing_info_template = PromptTemplate(
         "    \"isUnfair\": false\n"
         "  }}\n"
         "\n"
-
-        "※ 반드시 항목별로 구분된 JSON 객체를 반환하십시오. 누락되거나 하나로 합쳐진 결과는 허용되지 않습니다.\n"
+        "※ 반드시 각 항목을 개별 JSON 객체로 반환하십시오. 배열([])로 묶지 마십시오.\n"
+        "※ category 값은 반드시 \"processingPurpose\" 또는 \"collectedItems\"여야 합니다.\n"
+        "※ isUnfair가 true인 경우에는 problemStatement, reason, legalBasis를 포함해야 합니다.\n"
     )
 )
 
