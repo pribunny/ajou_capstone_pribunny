@@ -102,11 +102,12 @@ const summarizeInternal = async (summaryText, data_size) => {
     }
   }
 
-  const finalResults = responseData.results.map(item => ({
-    category: item.category,
-    summaryItems: item.summaryItems
+  const finalResults = responseData.results
+    .filter(item => Array.isArray(item.summaryItems) && item.summaryItems.length > 0)
+    .map(item => ({
+      category: item.category,
+      summaryItems: item.summaryItems
   }));
-
   return {
     success: true,
     documentId: responseData.documentId,
