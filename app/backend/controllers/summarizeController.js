@@ -2,10 +2,10 @@ const htmlToMarkdown = require('../utils/htmlToMarkdown');
 const splitParagraphs = require('../utils/splitParagraphs');
 const getTextFromS3 = require('../utils/getTextFromS3');
 const deleteS3Object = require('../utils/deleteS3Object');
-const axios = require('axios');
-const DOMPurify = require('isomorphic-dompurify');
 const splitMarkdownToParagraphs = require('../utils/splitMarkdownToParagraphs');
 
+const axios = require('axios');
+const DOMPurify = require('isomorphic-dompurify');
 const modelServerUrl = process.env.MODEL_SERVER_IP;
 
 // ✅ 내부 처리 함수
@@ -23,7 +23,7 @@ const summarizeInternal = async (summaryText, data_size) => {
 
     try {
       plainText = await getTextFromS3(bucketName, key);
-      console.log("plainText: ", plainText)
+      //console.log("plainText: ", plainText)
     } catch (error) {
       await tryDeleteS3(bucketName, key);
       throw {
@@ -37,7 +37,7 @@ const summarizeInternal = async (summaryText, data_size) => {
     try {
       const sanitizedHtml = DOMPurify.sanitize(plainText);
       const markdownText = htmlToMarkdown(sanitizedHtml);
-      console.log("markdownText: ", markdownText)
+      //console.log("markdownText: ", markdownText)
       paragraphs = splitParagraphs(markdownText);
       paragraphs.forEach((p, i) => {
         console.log(`--- 문단 ${i + 1} ---`);
