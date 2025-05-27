@@ -32,7 +32,7 @@ export default function ResultPage() {
 
     const [summaryItems, setSummaryItems] = useState([]);
     const [unfairItems, setUnfairItems] = useState([]);
-    const [errorMessage, setErrorMessage] = useState([]); //테스트용으로 일부러 넣음여
+    const [errorMessage, setErrorMessage] = useState([]);
 
     const categoryNameMap = {
         processingPurpose: "개인정보 처리 목적",
@@ -101,12 +101,12 @@ export default function ResultPage() {
                     );
 
                 const unfair_data = results
-                    .filter(item => Array.isArray(item.detectedItems))
+                    .filter(item => Array.isArray(item.detectItems))
                     .flatMap(item =>
                         item.detectedItems
                             .filter(detect => detect.isUnfair === true)
                             .map(detect => ({
-                                category: item.category,
+                                category: detect.category,
                                 problemStatement: detect.problemStatement,
                                 reason: detect.reason,
                                 legalBasis: detect.legalBasis,
