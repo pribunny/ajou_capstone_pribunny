@@ -1,253 +1,298 @@
 from langchain.prompts import PromptTemplate
 
-# 독소조항 탐지 수정(++구체적인 법명 언급, 작성 지침 추가)
-unfair_detect_purpose_template = PromptTemplate(
+# # 독소조항 탐지 수정(++구체적인 법명 언급, 작성 지침 추가)
+unfair_detect_processing_info_template = PromptTemplate(
     input_variables=["context", "question"],
     template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보의 처리 목적'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+        "You are a legal assistant tasked with analyzing clauses in a privacy policy to determine whether they contain any legally unfair terms or violations.\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+        "The provided Full_clause may contain content related to both of the following categories:\n"
+        "1. 개인정보의 처리 목적 (Purpose of Processing Personal Data)\n"
+        "2. 처리하는 개인정보의 항목 (Items of Personal Data Processed)\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+        "You must evaluate each category **separately** and return a JSON result **for each category**. If both are present, return two JSON objects in a list.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+        "Each analysis must be based on:\n"
+        "- 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 시행령, 표준지침 등\n"
+        "- 작성 가이드라인 (Guidelines): 각 항목별 작성 기준에 따라 판단\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+        "### 판단 원칙:\n"
+        "- context에 포함된 법 조항을 위반한 경우,\n"
+        "  → 관련 법 조항과 작성 가이드라인을 매핑하여 다음 형식으로 작성하십시오:\n"
+        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n"
+        "- 반드시 위 문장을 포함한 서술형 reason을 작성하십시오 (단순 나열 금지)\n"
+        "- '동의함'이 기본값인 경우도 위반으로 간주합니다.\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-        
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장을 그대로 작성하시오.\n\n"
-        
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 개인정보의 처리 목적일 경우 근거 기준으로 '표준 개인정보 보호지침 제18조(개인정보 처리방침의 작성기준 등)'이라 작성하시오\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-        
-        "※ 작성 가이드라인:\n"
-        "[개인정보의 처리 목적]\n"
-        "- 구체적이고 상세하게 기재해야하며, '~등' 으로 불명확하게 기재하면 안된다.\n"
-        "- 고유식별정보의 경우 개인정보 보호법 제24조제1항에서 구체적으로 처리를 요구하거나 허용하는 경우 또는 정보주체로부터 별도의 동의를 받은 경우에만 처리할 수 있다.\n\n"
-    )
-)
-unfair_detect_items_template = PromptTemplate(
-    input_variables=["context", "question", "law_clause"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '처리하는 개인정보의 항목'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+        "### 축약 표현 예외 규칙:\n"
+        "- 아래 표현은 구체적으로 작성된 것으로 간주되어 위반이 아닙니다:\n"
+        "  - “아이디, 비밀번호, 이름, 생년월일, 성별, 휴대전화번호 수집합니다”\n"
+        "  - “선택항목으로 본인확인 이메일주소 수집합니다”\n"
+        "  → '수집합니다'가 있어도 항목이 명확히 나열되어 있으면 문제 없음\n"
+        "- '선택항목'이라는 표현은 선택 여부를 나타내는 것으로, 구체성을 해치지 않음\n"
+        "- 축약 표현은 '~등', '~기타', '기타 필요한 정보', '이 외 정보' 등\n"
+        "- 이러한 축약이 포함되지 않았다면 isUnfair: false로 판단하십시오\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+        "### 작성 가이드라인:\n"
+        "[1] 개인정보의 처리 목적:\n"
+        "- 목적은 명확하고 구체적으로 작성해야 하며, '~등'으로 모호하게 표현하면 안 됩니다.\n"
+        "- 고유식별정보는 별도 동의 또는 법적 근거 필요 (개인정보 보호법 제24조제1항)\n\n"
+        "[2] 처리하는 개인정보의 항목:\n"
+        "- 항목은 구체적으로 작성해야 하며 '~등', '기타' 등의 축약 표현은 위반\n"
+        "- 정보주체의 동의 없이 처리하는 항목은 그 근거와 함께 별도 구분\n"
+        "- 수집 목적에 따라 항목을 명시하고, 자동 수집 항목도 명확히 작성해야 함\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+        "### Full_clause:\n{question}\n\n"
+        "### Context (법적 기준):\n{context}\n\n"
 
-        "- 아래 표현은 구체적으로 작성된 것으로 간주하여 문제가 없습니다:\n"
-        "- “아이디, 비밀번호, 이름, 생년월일, 성별, 휴대전화번호 수집합니다”\n"
-        "- “선택항목으로 본인확인 이메일주소 수집합니다”\n"
-        "- → '수집합니다'라는 표현이 있어도, 항목이 명확히 나열되어 있다면 문제되지 않습니다.\n"
+        "### 응답 형식:\n"
+        "항목이 모두 문제가 없는 경우:\n"
+    
+        "  {{\"category\": \"processingPurpose\", \"isUnfair\": false}},\n"
+        "  {{\"category\": \"collectedItems\", \"isUnfair\": false}}\n"
         "\n"
-        "- '선택항목'은 항목의 선택 여부만 나타낼 뿐, 내용의 구체성을 해치지 않습니다.\n"
-        "- 따라서 단일 항목이라도 명확히 특정되어 있다면 문제가 없습니다.\n"
+
+        "항목 중 하나라도 위반이 있을 경우:\n"
+
+        "  {{\n"
+        "    \"category\": \"processingPurpose\",\n"
+        "    \"isUnfair\": true,\n"
+        "    \"problemStatement\": \"<문제가 되는 문장>\",\n"
+        "    \"reason\": \"<문제 설명>\",\n"
+        "    \"legalBasis\": \"<법령 근거>\"\n"
+        "  }},\n"
+        "  {{\n"
+        "    \"category\": \"collectedItems\",\n"
+        "    \"isUnfair\": false\n"
+        "  }}\n"
         "\n"
-        "- 다음과 같은 표현은 축약으로 간주합니다: '~등', '~기타', '기타 필요한 정보', '이 외 정보'\n"
-        "- 이러한 축약이 없는 경우, 'isUnfair: false'로 판단하십시오.\n"
 
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장을 그대로 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[처리하는 개인정보의 항목]\n"
-        "- 개인정보 항목은 구체적으로 작성해야 한다.  '~등'과 같이 축약하거나 추상적이고 모호한 표현을 사용하면 안된다.\n"
-        "- 정보주체의 동의 없이 처리하는 개인정보에 대해서는 그 항목과 처리의 법적 근거를 동의를 받아 수집하는 개인정보와 구분하여 기재해야 한다.\n"
-        "- 개인정보 처리의 법적 근거는 개인정보 보호법 제15조 제1항 각 호의 사항 또는 개별 법령에 근거하는 경우 해당 법력을 기재한다\n"
-        "- 법적 근거를 작성할때 그 법령명 외에 해당하는 조문까지 구체적으로 작성해야한다.\n"
-        "- 정보주체의 동의를 받아 처리하는 개인정보는 그 처리 목적에 따른 개인정보 항목을 기재해야한다.\n"
-        "- 사무 처리 과정이나 서비스 제공 과정에서 자동으로 생성・수집되는 개인정보 항목이 있는 경우에는 해당 업무와 개인정보 항목을 명시해야 한다.\n"
+        "※ 반드시 항목별로 구분된 JSON 객체를 반환하십시오. 누락되거나 하나로 합쳐진 결과는 허용되지 않습니다.\n"
     )
 )
 
-unfair_detect_children_under_14_template = PromptTemplate(
+# unfair_detect_purpose_items_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '처리하는 개인정보의 항목'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "- 아래 표현은 구체적으로 작성된 것으로 간주하여 문제가 없습니다:\n"
+#         "- “아이디, 비밀번호, 이름, 생년월일, 성별, 휴대전화번호 수집합니다”\n"
+#         "- “선택항목으로 본인확인 이메일주소 수집합니다”\n"
+#         "- → '수집합니다'라는 표현이 있어도, 항목이 명확히 나열되어 있다면 문제되지 않습니다.\n"
+#         "\n"
+#         "- '선택항목'은 항목의 선택 여부만 나타낼 뿐, 내용의 구체성을 해치지 않습니다.\n"
+#         "- 따라서 단일 항목이라도 명확히 특정되어 있다면 문제가 없습니다.\n"
+#         "\n"
+#         "- 다음과 같은 표현은 축약으로 간주합니다: '~등', '~기타', '기타 필요한 정보', '이 외 정보'\n"
+#         "- 이러한 축약이 없는 경우, 'isUnfair: false'로 판단하십시오.\n"
+
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장을 그대로 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[개인정보의 처리 목적]\n"
+#         "- 구체적이고 상세하게 기재해야하며, '~등' 으로 불명확하게 기재하면 안된다.\n"
+#         "- 고유식별정보의 경우 개인정보 보호법 제24조제1항에서 구체적으로 처리를 요구하거나 허용하는 경우 또는 정보주체로부터 별도의 동의를 받은 경우에만 처리할 수 있다.\n\n"
+#         "[처리하는 개인정보의 항목]\n"
+#         "- 개인정보 항목은 구체적으로 작성해야 한다.  '~등'과 같이 축약하거나 추상적이고 모호한 표현을 사용하면 안된다.\n"
+#         "- 정보주체의 동의 없이 처리하는 개인정보에 대해서는 그 항목과 처리의 법적 근거를 동의를 받아 수집하는 개인정보와 구분하여 기재해야 한다.\n"
+#         "- 개인정보 처리의 법적 근거는 개인정보 보호법 제15조 제1항 각 호의 사항 또는 개별 법령에 근거하는 경우 해당 법력을 기재한다\n"
+#         "- 법적 근거를 작성할때 그 법령명 외에 해당하는 조문까지 구체적으로 작성해야한다.\n"
+#         "- 정보주체의 동의를 받아 처리하는 개인정보는 그 처리 목적에 따른 개인정보 항목을 기재해야한다.\n"
+#         "- 사무 처리 과정이나 서비스 제공 과정에서 자동으로 생성・수집되는 개인정보 항목이 있는 경우에는 해당 업무와 개인정보 항목을 명시해야 한다.\n\n"
+#     )
+# )
+
+
+# unfair_detect_children_under_14_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '14세 미만 아동의 개인정보 처리에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[14세 미만 아동의 개인정보 처리에 관한 사항]\n"
+#         "- 아동의 개인정보를 동의를 받아 처리하고자 하는 경우 법정대리인의 동의를 얻어 개인정보를 수집한다는 내용 및 법정대리인 동의 확인방법 등을 기재해야한다.\n"
+#         "- 법정대리인의 동의 확인 방법은 법령 내용을 그대로 나열하는 것이 아니라 개인정보처리자가 실제로 사용하는 방법을 기재해야 한다.\n"
+#         "- 개인정보처리자가 14세 미만 아동의 개인정보를 처리하기 위해 개인정보보호법 제22조의2에 따른 법정대리인의 동의를 받기 위하여 아동으로부터 수집하는 법정대리인의 개인정보(이름, 연락처 등)에 대해 기재해야 한다.\n"
+#         "- 법정대리인의 동의 없이 해당 아동으로부터 직접 수집하는 법정대리인의 개인정보에 대해 '처리하는 개인정보 항목'에 포함하여 기재할 수 있다.\n"
+#         "- 14세 미만 아동의 개인정보를 처리하여 이를 처리방침에 안내할 때에는 이해하기 쉬운 양식과 명확하고 알기 쉬운 언어를 사용해야 한다. 이때, 서비스의 주된 이용 대상이 14세 미만 아동인 경우 '아동용 개인정보 처리방침'을 별도로 마련해 안내해야 한다.\n\n"
+#     )
+# )
+
+# unfair_detect_retention_period_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '개인정보의 처리 및 보유 기간'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[개인정보의 처리 및 보유 기간]\n"
+#         "- 정보주체로부터 동의 받는 '보유·이용 기간' 또는 법령에 따른 '보유·이용 기간'에 따라 개인정보를 보유할 수 있다는 내용을 기재해야 한다.\n"
+#         "- '개인정보 처리 목적'에서 기재한 해당 사무에 따른 구체적인 처리·보유 기간을 기재해야 한다.\n"
+#         "- 관계 법령에 개인정보의 보유 기간에 대한 근거가 있는 경우에는 해당 법령명 및 조문, 항목, 법령에서 정한 보유 기간을 기재해야 한다.\n"
+#         "- 보유 기간은 '목적 달성시'와 같이 추상적으로 기재하지 않고 구체적으로 기재해야 하며, 정보주체의 동의를 받아 개인정보를 수집·이용 하는 경우 동의 받는 사항과 일치하도록 기재해야 한다.\n\n"
+#     
+ #)
+# )
+
+
+unfair_detect_storage_deletion_template = PromptTemplate(
     input_variables=["context", "question"],
     template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '14세 미만 아동의 개인정보 처리에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+        "You are a legal assistant tasked with analyzing clauses in a privacy policy to determine whether they contain any legally unfair terms or violations.\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+        "The provided Full_clause may include content related to both of the following categories:\n"
+        "1. 개인정보의 처리 및 보유 기간 (retentionPeriod)\n"
+        "2. 개인정보의 파기 절차 및 방법 (destructionProcedure)\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+        "You must evaluate each category **separately** and return a JSON result **for each category**. If both are present, return two JSON objects (not an array).\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+        "Each analysis must be based on:\n"
+        "- 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 시행령, 표준지침 등\n"
+        "- 작성 가이드라인 (Guidelines): 각 항목별 작성 기준에 따라 판단\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+        "### 판단 원칙:\n"
+        "- context에 포함된 법 조항을 위반한 경우,\n"
+        "  → 관련 법 조항과 작성 가이드라인을 매핑하여 다음 형식으로 작성하십시오:\n"
+        "  개인정보처리방침은 ~~하게 작성되어야 합니다.\n"
+        "- 반드시 위 문장을 포함한 서술형 reason을 작성하십시오 (단순 나열 금지)\n"
+        "- '동의함'이 기본값인 경우도 위반으로 간주합니다.\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+        "### 작성 가이드라인:\n"
+        "[1] 개인정보의 처리 및 보유 기간 (retentionPeriod):\n"
+        "- 정보주체로부터 동의 받은 보유 기간 또는 법령상 보유 기간을 구체적으로 명시해야 하며, '목적 달성 시'와 같은 추상적 표현은 허용되지 않습니다.\n"
+        "- 보유 기간은 수집 목적과 일치해야 하며, 법령에 근거한 경우 해당 법령명과 조문, 항목, 보유기간을 기재해야 합니다.\n\n"
+        "[2] 개인정보의 파기 절차 및 방법 (destructionProcedure):\n"
+        "- 개인정보가 불필요하게 된 경우 지체 없이 파기한다는 원칙을 명시해야 합니다.\n"
+        "- 파기 절차와 방법은 기술적·관리적으로 구체적으로 서술되어야 합니다.\n"
+        "- 법령에 따라 보존하는 경우, 해당 법령명·조문·항목을 명확히 기재해야 합니다.\n"
+        "- 보존 관련 내용이 '보유 기간' 항목에 명확히 작성되어 있다면, '파기' 항목에 반복 기재하지 않아도 됩니다.\n\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+        "### Full_clause:\n{question}\n\n"
+        "### Context (법적 기준):\n{context}\n\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[14세 미만 아동의 개인정보 처리에 관한 사항]\n"
-        "- 아동의 개인정보를 동의를 받아 처리하고자 하는 경우 법정대리인의 동의를 얻어 개인정보를 수집한다는 내용 및 법정대리인 동의 확인방법 등을 기재해야한다.\n"
-        "- 법정대리인의 동의 확인 방법은 법령 내용을 그대로 나열하는 것이 아니라 개인정보처리자가 실제로 사용하는 방법을 기재해야 한다.\n"
-        "- 개인정보처리자가 14세 미만 아동의 개인정보를 처리하기 위해 개인정보보호법 제22조의2에 따른 법정대리인의 동의를 받기 위하여 아동으로부터 수집하는 법정대리인의 개인정보(이름, 연락처 등)에 대해 기재해야 한다.\n"
-        "- 법정대리인의 동의 없이 해당 아동으로부터 직접 수집하는 법정대리인의 개인정보에 대해 '처리하는 개인정보 항목'에 포함하여 기재할 수 있다.\n"
-        "- 14세 미만 아동의 개인정보를 처리하여 이를 처리방침에 안내할 때에는 이해하기 쉬운 양식과 명확하고 알기 쉬운 언어를 사용해야 한다. 이때, 서비스의 주된 이용 대상이 14세 미만 아동인 경우 '아동용 개인정보 처리방침'을 별도로 마련해 안내해야 한다.\n\n"
+        "### 응답 형식:\n"
+        "항목이 모두 문제가 없는 경우:\n"
+        "  {{\"category\": \"retentionPeriod\", \"isUnfair\": false}},\n"
+        "  {{\"category\": \"destructionProcedure\", \"isUnfair\": false}}\n"
+        "\n"
+        "항목 중 하나라도 위반이 있을 경우:\n"
+        "  {{\n"
+        "    \"category\": \"retentionPeriod\",\n"
+        "    \"isUnfair\": true,\n"
+        "    \"problemStatement\": \"<문제가 되는 문장>\",\n"
+        "    \"reason\": \"<문제 설명>\",\n"
+        "    \"legalBasis\": \"<법령 근거>\"\n"
+        "  }},\n"
+        "  {{\n"
+        "    \"category\": \"destructionProcedure\",\n"
+        "    \"isUnfair\": false\n"
+        "  }}\n"
+        "\n"
+        "※ 반드시 각 항목을 개별 JSON 객체로 출력하십시오. 배열([])로 묶지 마십시오.\n"
+        "※ category 값은 반드시 \"retentionPeriod\" 또는 \"destructionProcedure\" 중 하나여야 합니다.\n"
+        "※ isUnfair가 true인 경우 problemStatement, reason, legalBasis는 필수 항목입니다.\n"
     )
 )
 
-unfair_detect_retention_period_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보의 처리 및 보유 기간'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[개인정보의 처리 및 보유 기간]\n"
-        "- 정보주체로부터 동의 받는 '보유·이용 기간' 또는 법령에 따른 '보유·이용 기간'에 따라 개인정보를 보유할 수 있다는 내용을 기재해야 한다.\n"
-        "- '개인정보 처리 목적'에서 기재한 해당 사무에 따른 구체적인 처리·보유 기간을 기재해야 한다.\n"
-        "- 관계 법령에 개인정보의 보유 기간에 대한 근거가 있는 경우에는 해당 법령명 및 조문, 항목, 법령에서 정한 보유 기간을 기재해야 한다.\n"
-        "- 보유 기간은 '목적 달성시'와 같이 추상적으로 기재하지 않고 구체적으로 기재해야 하며, 정보주체의 동의를 받아 개인정보를 수집·이용 하는 경우 동의 받는 사항과 일치하도록 기재해야 한다.\n\n"
-    )
-)
-
-unfair_detect_destruction_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보의 파기 절차 및 방법에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
-
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
-
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[개인정보의 파기 절차 및 방법에 관한 사항]\n"
-        "- 처리하고 있는 개인정보가 불필요하게 되었을 경우 지체없이 파기한다는 내용을 기재해야 한다.\n"
-        "- 다른 볍령에 따라 개인정보를 파기하지 않고 보존하는 경우에는 해당 법령 및 조문과 보존하는 개인정보 항목을 구체적으로 기재해야 한다.\n"
-        "- '개인정보의 처리 및 보유기간' 항목에서 다른 법령에 따라 보존하는 개인정보의 항목과 보존 근거(법령 및 조문)를 구체적으로 기재한 경우에는 '개인정보의 파기 절차 및 방법에 관한 사항'에서는 기재하지 않아도 된다.\n"
-        "- 파기의 절차, 방법 등에 관한 세부적인 내용을 기재해야 한다.\n\n"
-    )
-)
 
 unfair_detect_third_party_template = PromptTemplate(
     input_variables=["context", "question"],
@@ -304,49 +349,49 @@ unfair_detect_third_party_template = PromptTemplate(
     )
 )
 
-unfair_detect_additional_use_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '추가적인 이용·제공이 지속적으로 발생 시 판단 기준'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+# unfair_detect_additional_use_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '추가적인 이용·제공이 지속적으로 발생 시 판단 기준'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[추가적인 이용·제공이 지속적으로 발생 시 판단 기준]\n"
-        "- 개인정보처리자는 당초 수집 목적과 합리적으로 관련된 범위에서 개인정보보호법 제15조제3항 및 개인정보보호법 제17조제4항에 따라 정보주체의 동의 없이 개인정보를 추가적으로 이용 또는 제공하는 것이 지속적으로 발생하는 경우에는, 관련 내용(제공받는자, 개인정보 항목, 이용・제공 목적, 제공받는 자의 보유 및 이용기간 등)을 개인정보보호법 시행령 제14조의2 제1항 각 호에 따른 추가적인 이용 및 제공하기 위한 고려사항에 따른 판단기준과 함께 구체적으로 기재해야 한다.\n\n"
-    )
-)
+#         "※ 작성 가이드라인:\n"
+#         "[추가적인 이용·제공이 지속적으로 발생 시 판단 기준]\n"
+#         "- 개인정보처리자는 당초 수집 목적과 합리적으로 관련된 범위에서 개인정보보호법 제15조제3항 및 개인정보보호법 제17조제4항에 따라 정보주체의 동의 없이 개인정보를 추가적으로 이용 또는 제공하는 것이 지속적으로 발생하는 경우에는, 관련 내용(제공받는자, 개인정보 항목, 이용・제공 목적, 제공받는 자의 보유 및 이용기간 등)을 개인정보보호법 시행령 제14조의2 제1항 각 호에 따른 추가적인 이용 및 제공하기 위한 고려사항에 따른 판단기준과 함께 구체적으로 기재해야 한다.\n\n"
+#     )
+# )
 
 unfair_detect_outsourcing_template = PromptTemplate(
     input_variables=["context", "question"],
@@ -494,98 +539,98 @@ unfair_detect_security_measures_template = PromptTemplate(
     )
 )
 
-unfair_detect_sensitive_info_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '민감정보의 공개 가능성 및 비공개를 선택하는 방법'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+# unfair_detect_sensitive_info_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '민감정보의 공개 가능성 및 비공개를 선택하는 방법'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[민감정보의 공개 가능성 및 비공개를 선택하는 방법]\n"
-        "- 개인정보처리자는 재화 또는 서비스를 제공하는 과정에서 공개되는 정보 중 민감정보가 포함되어 있는 경우 ‘민감정보가 공개될 수 있다는 사실’과 ‘비공개를 선택하는 방법’을 기재해야 한다\n"
-        "- 이때, 공개 게시판, 소셜네트워크서비스(SNS) 등 서비스 자체가 공개를 기본으로 하여 상호 의사소통을 목적으로 하고 있어 정보체가 공개 게시판 등에 스스로 입력하는 정보가 공개된다는 사실을 이미 알고 있고, 개인정보처리자가 민감정보가 공개될 것을 예측하기 어려운 경우에는 제외한다.\n"
-        "- 공개될 수 있는 민감정보 항목을 모두 기재하고, 비공개를 선택하는 절차와 방법 등에 관한 구체적인 내용을 기재해야 한다.\n\n"
-    )
-)
+#         "※ 작성 가이드라인:\n"
+#         "[민감정보의 공개 가능성 및 비공개를 선택하는 방법]\n"
+#         "- 개인정보처리자는 재화 또는 서비스를 제공하는 과정에서 공개되는 정보 중 민감정보가 포함되어 있는 경우 ‘민감정보가 공개될 수 있다는 사실’과 ‘비공개를 선택하는 방법’을 기재해야 한다\n"
+#         "- 이때, 공개 게시판, 소셜네트워크서비스(SNS) 등 서비스 자체가 공개를 기본으로 하여 상호 의사소통을 목적으로 하고 있어 정보체가 공개 게시판 등에 스스로 입력하는 정보가 공개된다는 사실을 이미 알고 있고, 개인정보처리자가 민감정보가 공개될 것을 예측하기 어려운 경우에는 제외한다.\n"
+#         "- 공개될 수 있는 민감정보 항목을 모두 기재하고, 비공개를 선택하는 절차와 방법 등에 관한 구체적인 내용을 기재해야 한다.\n\n"
+#     )
+# )
 
-unfair_detect_pseudonymized_info_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '가명정보 처리에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+# unfair_detect_pseudonymized_info_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '가명정보 처리에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[가명정보 처리에 관한 사항]\n"
-        "- 개인정보처리자가 가명정보를 처리하는 경우에는 다음의 사항을 구체적으로 기재해야 한다.\n"
-        "- 이때, 다음의 사항이란 가명정보의 처리 목적, 가명정보 처리 기간, 가명정보의 제3자 제공에 관한 사항 (해당되는 경우에만 작성), 가명정보 처리의 위탁에 관한 사항 (해당되는 경우에만 작성), 가명처리하는 개인정보의 항목, 개인정보보호법 제28조의4(가명정보에 대한 안전조치 의무 등)에 따른 가명정보의 안전성 확보조치에 관한 사항을 말한다.\n"
-        "- '개인정보의 제3자 제공'은 '개인정보의 제3자 제공에 관한 사항'에 포함하고, 위탁은 ‘개인정보 처리업무의 위탁에 관한 사항’의 지침을 따른다. \n\n"
+#         "※ 작성 가이드라인:\n"
+#         "[가명정보 처리에 관한 사항]\n"
+#         "- 개인정보처리자가 가명정보를 처리하는 경우에는 다음의 사항을 구체적으로 기재해야 한다.\n"
+#         "- 이때, 다음의 사항이란 가명정보의 처리 목적, 가명정보 처리 기간, 가명정보의 제3자 제공에 관한 사항 (해당되는 경우에만 작성), 가명정보 처리의 위탁에 관한 사항 (해당되는 경우에만 작성), 가명처리하는 개인정보의 항목, 개인정보보호법 제28조의4(가명정보에 대한 안전조치 의무 등)에 따른 가명정보의 안전성 확보조치에 관한 사항을 말한다.\n"
+#         "- '개인정보의 제3자 제공'은 '개인정보의 제3자 제공에 관한 사항'에 포함하고, 위탁은 ‘개인정보 처리업무의 위탁에 관한 사항’의 지침을 따른다. \n\n"
 
-    )
-)
+#     )
+# )
 
 unfair_detect_auto_collection_template = PromptTemplate(
     input_variables=["context", "question"],
@@ -731,325 +776,340 @@ unfair_detect_rights_and_methods_template = PromptTemplate(
     )
 )
 
-unfair_detect_privacy_officer_template = PromptTemplate(
+# unfair_detect_privacy_officer_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '개인정보 보호책임자의 성명 또는 개인정보 업무 담당부서 및 고충사항을 처리하는 부서에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[개인정보 보호책임자의 성명 또는 개인정보 업무 담당부서 및 고충사항을 처리하는 부서에 관한 사항]\n"
+#         "- 개인정보처리자가 법 제31조에 따라 지정한 개인정보 보호책임자의 성명 또는 개인정보 보호업무 및 관련 고충사항을 처리하는 부서의 명칭과 전화번호 등 연락처(전화번호, 전자우편 주소 등)를 기재해야 한다.\n"
+#         "- 개인정보 처리방침에 공개된 연락처는 연결이 어렵거나 지나치게 지연되는 등 정보주체의 권리 행사를 어렵게 하지 않아야 한다.\n"
+#         "- 정보주체의 알권리 보장 차원에서 개인정보 보호책임자의 성명과 개인정보보호 담당부서, 연락처를 모두 기재하는 것도 가능하다.\n\n"
+
+#     )
+# )
+# unfair_detect_domestic_agent_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '국내대리인 지정에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[국내대리인 지정에 관한 사항]\n"
+#         "- 국외사업자로서 법 제31조의2에 따라 국내대리인을 지정하여야 하는 경우 국내대리인의 성명(법인인 경우 법인명, 대표자의 성명), 주소(법인인 경우 영업소 소재지), 전화번호 및 전자우편 주소를 기재해야 한다.\n\n"
+
+#     )
+# )
+
+unfair_detect_user_protection_template = PromptTemplate(
     input_variables=["context", "question"],
     template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보 보호책임자의 성명 또는 개인정보 업무 담당부서 및 고충사항을 처리하는 부서에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+        "You are a legal assistant tasked with analyzing clauses in a privacy policy to determine whether they contain any legally unfair terms or violations.\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+        "The provided Full_clause may contain content related to both of the following categories:\n"
+        "1. 개인정보 보호책임자 및 고충처리부서에 관한 사항 (privacyOfficerInfo)\n"
+        "2. 정보주체의 권익침해에 대한 구제방법 (remedyMethod)\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+        "You must evaluate each category **separately** and return a JSON result **for each category**. If both are present, return two JSON objects (not a list or array).\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+        "Each analysis must be based on:\n"
+        "- 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 시행령, 표준지침 등\n"
+        "- 작성 가이드라인 (Guidelines): 각 항목별 작성 기준에 따라 판단\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+        "### 판단 원칙:\n"
+        "- context에 포함된 법 조항을 위반한 경우,\n"
+        "  → 관련 법 조항과 작성 가이드라인을 매핑하여 다음 문장 형식으로 reason을 작성하십시오:\n"
+        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n"
+        "- 반드시 위 문장을 포함한 서술형 reason을 작성하십시오 (단순 나열 금지)\n"
+        "- '동의함'이 기본값인 경우도 위반으로 간주합니다.\n\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+        "### 작성 가이드라인:\n"
+        "[1] 개인정보 보호책임자 및 고충처리부서에 관한 사항 (privacyOfficerInfo):\n"
+        "- 개인정보 보호책임자의 성명, 개인정보 보호업무 및 고충처리 부서의 명칭과 연락처(전화번호, 이메일 등)를 명시해야 합니다.\n"
+        "- 공개된 연락처는 실제 연결 가능해야 하며, 지연되거나 연결이 어려운 경우 권리 행사가 제한될 수 있습니다.\n"
+        "- 정보주체의 알권리를 보장하기 위해 보호책임자, 담당부서, 연락처를 모두 기재하는 것이 바람직합니다.\n\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+        "[2] 정보주체의 권익침해에 대한 구제방법 (remedyForInfringement):\n"
+        "- 정보주체가 침해 피해를 입었을 때 도움을 받을 수 있는 외부 기관(개인정보침해신고센터, 분쟁조정위원회 등)을 안내해야 합니다.\n"
+        "- 기관명이나 연락처는 최신 정보로 제공되어야 하며, 피해구제가 원만하지 않을 경우 추가적으로 요청 가능한 절차를 안내해야 합니다.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[개인정보 보호책임자의 성명 또는 개인정보 업무 담당부서 및 고충사항을 처리하는 부서에 관한 사항]\n"
-        "- 개인정보처리자가 법 제31조에 따라 지정한 개인정보 보호책임자의 성명 또는 개인정보 보호업무 및 관련 고충사항을 처리하는 부서의 명칭과 전화번호 등 연락처(전화번호, 전자우편 주소 등)를 기재해야 한다.\n"
-        "- 개인정보 처리방침에 공개된 연락처는 연결이 어렵거나 지나치게 지연되는 등 정보주체의 권리 행사를 어렵게 하지 않아야 한다.\n"
-        "- 정보주체의 알권리 보장 차원에서 개인정보 보호책임자의 성명과 개인정보보호 담당부서, 연락처를 모두 기재하는 것도 가능하다.\n\n"
+        "### Full_clause:\n{question}\n\n"
+        "### Context (법적 기준):\n{context}\n\n"
 
-    )
-)
-unfair_detect_domestic_agent_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '국내대리인 지정에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
-
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
-
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[국내대리인 지정에 관한 사항]\n"
-        "- 국외사업자로서 법 제31조의2에 따라 국내대리인을 지정하여야 하는 경우 국내대리인의 성명(법인인 경우 법인명, 대표자의 성명), 주소(법인인 경우 영업소 소재지), 전화번호 및 전자우편 주소를 기재해야 한다.\n\n"
-
-    )
-)
-
-unfair_detect_remedy_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '정보주체의 권익침해에 대한 구제방법'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
-
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
-
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[정보주체의 권익침해에 대한 구제방법]\n"
-        "- 정보주체가 개인정보침해에 대한 구제를 받을 수 있도록 하기 위하여 법에 따른 전문기관(개인정보침해신고센터, 개인정보 분쟁조정위원회), 수사기관 등을 안내할 것을 권장한다. 이때, 전문기관명 또는 연락처가 변경된 경우에는 현행화하여 정보주체에게 혼란을 주지 않도록 해야한다.\n"
-        "- 개인정보처리자를 통한 피해구제가 원만하게 이뤄지지 않을 경우 정보주체가 추가적으로 피해 구제를 요청할 수 있는 방법을 안내할 것을 권장한다.\n\n"
-
-    )
-)
-
-unfair_detect_fixed_cctv_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '고정형 영상정보처리기기 운영・관리에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
-
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
-
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
-
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
-
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
-
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
-
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
-
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
-
-        "※ 작성 가이드라인:\n"
-        "[고정형 영상정보처리기기 운영・관리에 관한 사항]\n"
-        "- 고정형 영상정보처리기기 운영・관리 방침을 별도로 제정・공개하는 경우에는 해당하지 않는다.\n"
-        "- 고정형영상정보처리기기운영자는 개인정보보호법 시행령 제25조 제1항에 따른 사항을 포한 운영・관리 방침을 마련해야 한다.\n\n"
-
+        "### 응답 형식:\n"
+        "항목이 모두 문제가 없는 경우:\n"
+        "  {{\"category\": \"privacyOfficerInfo\", \"isUnfair\": false}},\n"
+        "  {{\"category\": \"remedyForInfringement\", \"isUnfair\": false}}\n"
+        "\n"
+        "항목 중 하나라도 위반이 있을 경우:\n"
+        "  {{\n"
+        "    \"category\": \"privacyOfficerInfo\",\n"
+        "    \"isUnfair\": true,\n"
+        "    \"problemStatement\": \"<문제가 되는 문장>\",\n"
+        "    \"reason\": \"<문제 설명>\",\n"
+        "    \"legalBasis\": \"<법령 근거>\"\n"
+        "  }},\n"
+        "  {{\n"
+        "    \"category\": \"remedyForInfringement\",\n"
+        "    \"isUnfair\": false\n"
+        "  }}\n"
+        "\n"
+        "※ 반드시 각 항목을 개별 JSON 객체로 출력하십시오. 배열([])로 묶지 마십시오.\n"
+        "※ category 값은 반드시 \"privacyOfficerInfo\" 또는 \"remedyForInfringement\" 중 하나여야 합니다.\n"
+        "※ isUnfair가 true인 경우에는 반드시 problemStatement, reason, legalBasis를 포함해야 합니다.\n"
     )
 )
 
-unfair_detect_mobile_cctv_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '이동형 영상정보처리기기 운영・관리에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+# unfair_detect_fixed_cctv_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '고정형 영상정보처리기기 운영・관리에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[이동형 영상정보처리기기 운영・관리에 관한 사항]\n"
-        "- 이동형 영상정보처리기기 운영・관리 방침을 별도로 제정・공개하는 경우에는 해당하지 않는다.\n"
-        "- 이동형영상정보처리기기운영자는 다음 각 호의 사항이 포함된 이동형 영상정보처리기기 운영・관리 방침을 마련해야 한다.(표준지침 제39조의3)\n\n"
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
 
-    )
-)
+#         "※ 작성 가이드라인:\n"
+#         "[고정형 영상정보처리기기 운영・관리에 관한 사항]\n"
+#         "- 고정형 영상정보처리기기 운영・관리 방침을 별도로 제정・공개하는 경우에는 해당하지 않는다.\n"
+#         "- 고정형영상정보처리기기운영자는 개인정보보호법 시행령 제25조 제1항에 따른 사항을 포한 운영・관리 방침을 마련해야 한다.\n\n"
 
-unfair_detect_optional_clauses_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보처리자가 개인정보 처리 기준 및 보호조치 등에 관하여 자율적으로 개인정보 처리방침에 포함하여 정한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+#     )
+# )
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+# unfair_detect_mobile_cctv_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '이동형 영상정보처리기기 운영・관리에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[개인정보처리자가 개인정보 처리 기준 및 보호조치 등에 관하여 자율적으로 개인정보 처리방침에 포함하여 정한 사항]\n"
-        "- 개인정보처리자는 법령에서 규정하고 있는 안전성 확보조치 관련 의무사항 외에 개인정보처리자가 자율적으로 이행하고 있는 개인정보보호 조치 사항에 대해 기재할 수 있다.\n\n"
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
 
-    )
-)
+#         "※ 작성 가이드라인:\n"
+#         "[이동형 영상정보처리기기 운영・관리에 관한 사항]\n"
+#         "- 이동형 영상정보처리기기 운영・관리 방침을 별도로 제정・공개하는 경우에는 해당하지 않는다.\n"
+#         "- 이동형영상정보처리기기운영자는 다음 각 호의 사항이 포함된 이동형 영상정보처리기기 운영・관리 방침을 마련해야 한다.(표준지침 제39조의3)\n\n"
 
-unfair_detect_policy_changes_template = PromptTemplate(
-    input_variables=["context", "question"],
-    template=(
-        "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
-        "You must identify unfair terms **only** for the item titled '개인정보 처리방침의 변경에 관한 사항'.\\n\\n"
-        "Analyze the clause based on the following two criteria:\\n"
-        "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
-        "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+#     )
+# )
 
-        "분석 시 아래 원칙을 따르십시오:\n"
-        "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
-        "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
-        "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
-        "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
-        "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+# unfair_detect_optional_clauses_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '개인정보처리자가 개인정보 처리 기준 및 보호조치 등에 관하여 자율적으로 개인정보 처리방침에 포함하여 정한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
 
-        "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
-        "  '동의함'이 기본값으로 설정되어 있는 경우\n"
-        "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
 
-        "Full_clause:\n{question}\n\n"
-        "Context (법적 기준):\n{context}\n\n"
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
 
-        "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: false\n"
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
 
-        "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
-        "isUnfair: true"
-        "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
-        "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
-        "legalBasis: <근거 기준>\n"
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
 
-        "※ problemStatement 명시할 때 주의사항\n"
-        "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
 
-        "※ 근거 기준 명시할 때 주의사항\n"
-        "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
 
-        "※ 작성 가이드라인:\n"
-        "[개인정보 처리방침의 변경에 관한 사항]\n"
-        "- 개인정보 처리방침을 변경하는 경우 변경 및 시행 시기, 변경된 내용을 지속적으로 공개해야 한다.\n"
-        "- 이전의 개인정보 처리방침이 있는 경우에는 그간의 변경 이력을 기재해야 한다. 이 경우, 정보주체가 이전 버전을 비교할 수 있도록 하거나, 변경의 주요 내용을 별도로 안내하는 등의 방식으로 변경 사항을 알리는 것을 권장한다.\n"
-        "- 주요 변경 사항을 별도로 안내하는 경우 웹페이지 팝업창 등을 통해 정보주체가 쉽게 확인할 수 있는 방법으로 알려야 한다.\n\n"
-    )
-)
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[개인정보처리자가 개인정보 처리 기준 및 보호조치 등에 관하여 자율적으로 개인정보 처리방침에 포함하여 정한 사항]\n"
+#         "- 개인정보처리자는 법령에서 규정하고 있는 안전성 확보조치 관련 의무사항 외에 개인정보처리자가 자율적으로 이행하고 있는 개인정보보호 조치 사항에 대해 기재할 수 있다.\n\n"
+
+#     )
+# )
+
+# unfair_detect_policy_changes_template = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=(
+#         "You are a legal assistant tasked with analyzing clauses in a privacy policy to identify whether they are legally unfair or violate any laws.\\n"
+#         "You must identify unfair terms **only** for the item titled '개인정보 처리방침의 변경에 관한 사항'.\\n\\n"
+#         "Analyze the clause based on the following two criteria:\\n"
+#         "1. 법적 기준 (Context): 아래 'Context'에 포함된 개인정보보호법, 개인정보보호법 시행령, 표준지침 등 법령\n"
+#         "2. 개인정보처리방침 및 수집·이용동의서 작성 가이드라인 (Guidelines): 개인정보처리방침을 작성할 때 준수해야 할 항목별 작성 기준\n\n"
+
+#         "분석 시 아래 원칙을 따르십시오:\n"
+#         "- Full_clause가 context에 포함된 법 조항을 위반한 경우:\n"
+#         "  해당 법 조항과 관련있는 가이드라인을 매핑하여,\n"
+#         "  개인정보처리방침 또는 수집·이용동의서가 어떻게 작성되어야 하는지를 다음 형식으로 서술하십시오:\n"
+#         "  개인정보처리방침은 ~~하게 작성되어야 합니다. 또는 수집·이용동의서는 ~~하게 작성되어야 합니다.\n\n"
+#         "- 반드시 위 문장을 포함한 서술형 설명으로 작성하십시오. 단순 법 조항 나열이 아닌, 조항의 의미와 그에 따른 작성 방식까지 명확히 설명하십시오.\n\n"
+
+#         "- Full_clause가 아래의 경우에 해당하는 경우도 위반으로 간주합니다.\n"
+#         "  '동의함'이 기본값으로 설정되어 있는 경우\n"
+#         "  해당하는 경우 관련 규정을 근거로 문제를 지적하십시오.\n\n"
+
+#         "Full_clause:\n{question}\n\n"
+#         "Context (법적 기준):\n{context}\n\n"
+
+#         "Full_clause에 아무런 문제가 없는 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: false\n"
+
+#         "Full_clause가 context에 포함된 법률 조항을 위반한 경우, 다음 형식에 따라 json 형식으로 답변하십시오:\n"
+#         "isUnfair: true"
+#         "problemStatement: <문제가 되는 문장을 그대로 작성>\n"
+#         "reason: <위 원칙에 따라 서술된 문제 설명 포함>\n"
+#         "legalBasis: <근거 기준>\n"
+
+#         "※ problemStatement 명시할 때 주의사항\n"
+#         "- 반드시 문제가 되는 문장만 작성하시오.\n\n"
+
+#         "※ 근거 기준 명시할 때 주의사항\n"
+#         "- 작성 가이드라인은 근거 기준에 포함하지 마십시오.\n\n"
+
+#         "※ 작성 가이드라인:\n"
+#         "[개인정보 처리방침의 변경에 관한 사항]\n"
+#         "- 개인정보 처리방침을 변경하는 경우 변경 및 시행 시기, 변경된 내용을 지속적으로 공개해야 한다.\n"
+#         "- 이전의 개인정보 처리방침이 있는 경우에는 그간의 변경 이력을 기재해야 한다. 이 경우, 정보주체가 이전 버전을 비교할 수 있도록 하거나, 변경의 주요 내용을 별도로 안내하는 등의 방식으로 변경 사항을 알리는 것을 권장한다.\n"
+#         "- 주요 변경 사항을 별도로 안내하는 경우 웹페이지 팝업창 등을 통해 정보주체가 쉽게 확인할 수 있는 방법으로 알려야 한다.\n\n"
+#     )
+# )
 
 collect_data_template = PromptTemplate( #수집하는 항목 탐지
     input_variables= ["full_clause"],
