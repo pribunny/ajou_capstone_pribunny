@@ -439,10 +439,6 @@ function showResult(summary, detect){
             detect_content.style.whiteSpace = 'normal';
             detect_content.style.maxWidth = '100%';
 
-            const detect_Statement = document.createElement('span');
-            detect_Statement.textContent = `문제 진술: ${item.problemStatement}`;
-            detect_Statement.style.display = 'block';
-
             const detect_reason = document.createElement('span');
             detect_reason.textContent = `이유: ${item.reason}`;
             detect_reason.style.display = 'block';
