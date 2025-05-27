@@ -1,6 +1,5 @@
 const { JSDOM } = require("jsdom");
 const TurndownService = require("turndown");
-
 // 개인정보 처리방침 관련 주요 섹션명 패턴 리스트
 const TARGET_SECTIONS = [
   '개인정보.*처리.?목적',
@@ -23,11 +22,16 @@ const TARGET_SECTIONS = [
   '민감정보.*공개',
   '개인정보.*보호수준',
   '개인정보.*보호 권리',
+  '개인정보의 수집 및 이용목적',
 ];
 
-const isTargetSection = (text) => {
-  return TARGET_SECTIONS.some(pattern => new RegExp(pattern).test(text));
-};
+function isTargetSection(text) {
+  return TARGET_SECTIONS.some(pattern => {
+    const regex = new RegExp(pattern, 'i');
+    return regex.test(text) || text.includes(pattern);
+
+  });
+}
 
 // 텍스트 중복 체크용 정규화 함수
 const normalizeTextForDuplicateCheck = (text) => {
@@ -56,7 +60,7 @@ const isDuplicateCenterNode = (node, existingNodes) => {
   return false;
 };
 
-// 중심노드 다음 나올 때까지 노드 수집 (DFS, 중심 노드 기준)
+// H태그 + 키워드 -> 중심노드 다음 나올 때까지 노드 수집 (DFS, 중심 노드 기준)
 const collectUntilNextCenter = (startNode, centerNodesSet, processedNodes) => {
   const collected = new Set();
   let shouldStop = false;
@@ -154,7 +158,7 @@ const convertNodeToMarkdown = (node, turndownService, processedNodes, processedT
   }
 };
 
-// 사이트별 제외 규칙
+// 사이트별 제외 규칙(H태그 + 키워드)
 const excludedMapBySite = {
   default: new Map([
     ['H3', ['개인정보 처리방침']]
@@ -184,13 +188,17 @@ const excludedMapBySite = {
     ['H3', ['제품', '기획전/혜택', '고객서비스', '지속가능경영', '회사소개', '부가정보', '윤리&준법경영']],
     ['H4', ['*']] 
   ]),
+  ikea: new Map([
+    ['H2', ['수면을 위한 모든 것', '이케아 공간 스타일링 서비스', 'IKEA 웹사이트 이용자는 쿠키 허용 여부를 선택할 수 있습니다.']],
+    ['H3', ['*']] 
+  ]),
 };
 
+//H태그 + 키워드 -> 사이트별 제외 규칙 적용시키기
 function getExcludedMap(htmlString) {
   const dom = new JSDOM(htmlString);
   const bodyText = dom.window.document.body.textContent;
 
-  // 디버깅을 위한 helper 함수
   function logMatch(keyword, contextRange = 30) {
     const idx = bodyText.indexOf(keyword);
     if (idx !== -1) {
@@ -235,11 +243,16 @@ function getExcludedMap(htmlString) {
     console.log('📌 [getExcludedMap] 삼성 맵 사용');
     return excludedMapBySite.samsung;
   }
-  
+  if (bodyText.includes('IKEA KOREA 개인정보처리방침')) {
+    logMatch('IKEA KOREA 개인정보처리방침');
+    console.log('📌 [getExcludedMap] 이케아 맵 사용');
+    return excludedMapBySite.ikea;
+  }
   console.log('📌 [getExcludedMap] 기본 맵 사용 (매칭된 키워드 없음)');
   return excludedMapBySite.default;
 }
 
+//H태그 + 키워드 -> 내용 제거하는 부분
 function cleanMarkdownIfNeeded(bodyText, markdownText) {
   function logMatch(keyword, contextRange = 30) {
     const idx = bodyText.indexOf(keyword);
@@ -300,8 +313,6 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
     if (cutPoint !== -1) {
       markdownText = markdownText.slice(0, cutPoint).trim();
     }
-
-    // 2) "다른 버전 보기"부터 "개인정보 제3자제공 현황(국외)"까지 삭제
     const startKeyword = '다른 버전 보기';
     const endKeyword = '개인정보 제3자제공 현황(국외)';
 
@@ -351,8 +362,6 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
     if (cutPoint !== -1) {
       markdownText = markdownText.slice(0, cutPoint).trim();
     }
-
-    // 2) "다른 버전 보기"부터 "개인정보 제3자제공 현황(국외)"까지 삭제
     const startKeyword = '[키워드검색](#)';
     const endKeyword = '개인정보처리방침(2025년 4월 25일 개정)';
 
@@ -383,105 +392,206 @@ function cleanMarkdownIfNeeded(bodyText, markdownText) {
       return markdownText.slice(0, cutPoint).trim();  // 이후 제거
     }
   }
-  
+  if (bodyText.includes('IKEA KOREA 개인정보처리방침')) {
+    logMatch('IKEA KOREA 개인정보처리방침');
+    console.log('📌 이케아 맵 사용');
+
+    const cutPoint = markdownText.indexOf('이전의 이케아의 개인정보처리 방침은 아래에서 확인하실 수 있습니다.');
+    if (cutPoint !== -1) {
+      return markdownText.slice(0, cutPoint).trim();  // 이후 제거
+    }
+  }
   return markdownText; // 조건 미충족 시 원본 유지
 }
-const htmlToMarkdown = (htmlString) => {
 
-  // 🔧 스크립트 태그 제거
+function postProcessMarkdown(filteredCenterNodes, markdownResult, bodyText) {
+
+  if (bodyText.includes('IKEA KOREA 개인정보처리방침')) {
+    filteredCenterNodes.forEach(node => {
+      const text = node.textContent.trim();
+      const escapedText = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // 특수문자 이스케이프
+
+      // 해당 텍스트가 포함된 줄 전체를 ## 헤딩으로 변환
+      const regex = new RegExp(`^(.{0,100}${escapedText}.{0,100})$`, 'gm');
+      markdownResult = markdownResult.replace(regex, (match) => {
+        return `\n\n## ${match.trim()}\n`;
+      });
+    });
+  }
+  return markdownResult;
+}
+
+// 키워드 포함 여부 판단 함수 (h태그가 아닌 키워드 검색용)
+function containsKeyword(text) {
+  return TARGET_SECTIONS.some(pattern => {
+    const regex = new RegExp(pattern, 'i');  // 대소문자 무시
+    return regex.test(text);
+  });
+}
+
+// h태그가 아닌 키워드 검색용
+function applySiteSpecificFiltering(bodyText, markdownText) {
+  let filtered = false;
+
+  // ✅ 리핏 사이트
+  if (bodyText.includes('리핏')) {
+    console.log('📌 [리핏] 사이트별 필터링 적용됨');
+
+    // " 국번없이 182)" 이후 제거
+    const cutPoint = markdownText.indexOf(' 국번없이 182)');
+    if (cutPoint !== -1) {
+      markdownText = markdownText.slice(0, cutPoint).trim();
+    }
+
+    // "**로그아웃 상태 입니다."부터 "[뒤로가기](#none)"까지 제거
+    const startKeyword = '**로그아웃 상태 입니다.';
+    const endKeyword = '[뒤로가기](#none)';
+
+    const startIdx = markdownText.indexOf(startKeyword);
+    const endIdx = markdownText.indexOf(endKeyword);
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      markdownText = markdownText.slice(0, startIdx) + markdownText.slice(endIdx + endKeyword.length);
+      markdownText = markdownText.trim();
+    }
+
+    markdownText += ' 리핏';
+
+    filtered = true;
+  }
+  // ❗ 조건에 맞는 사이트가 없을 때 로그
+  if (!filtered) {
+    console.log('ℹ️ [기본] 사이트별 필터링 조건 없음: 원본 그대로 반환됨');
+  }
+
+  return markdownText;
+}
+
+
+// 실제로 작동하는 부분
+const htmlToMarkdown = (htmlString) => {
   htmlString = htmlString.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  
+
   const dom = new JSDOM(htmlString);
   const document = dom.window.document;
   const bodyText = document.body.textContent;
   const turndownService = new TurndownService();
-  const allHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')];
 
-  // 1) 키워드에 맞는 노드 필터링
-  const targetNodes = allHeadings.filter(h => isTargetSection(h.textContent.trim()));
-  
-  // 🔍 키워드 기반 중심 노드 목록 로그 출력
-  console.log('🔑 키워드 기반 중심 노드 목록:');
-  targetNodes.forEach((node, idx) => {
-    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
-  });
+  // 1. 전체 태그 중 텍스트 있는 노드 대상 키워드 검색
+  const allNodes = [...document.querySelectorAll('*')].filter(
+    node => node.textContent && node.textContent.trim().length > 0
+  );
+  const targetNodes = allNodes.filter(node =>
+    isTargetSection(node.textContent.trim())
+  );
 
-  // === 예외 처리 추가 ===
-  if (targetNodes.length === 0) {
-    throw new Error('해당 페이지는 처리할 수 없습니다. (기술적 이슈)');
-  }
-
-  // 2) 중심 노드 확장: ±1 레벨 (네이버만), 아니면 동일 레벨만
-  const expandedCenterNodes = [];
-  const isNaver = htmlString.toLowerCase().includes('네이버 고객센터');
-  const excludedMap = getExcludedMap(htmlString);
-
-  // 중심 노드 확장
-  targetNodes.forEach(baseNode => {
-    const baseLevel = parseInt(baseNode.tagName.replace('H', ''), 10);
-
-    allHeadings.forEach(h => {
-      const level = parseInt(h.tagName.replace('H', ''), 10);
-
-      const levelCondition = isNaver
-        ? Math.abs(level - baseLevel) <= 1
-        : level === baseLevel;
-
-      if (levelCondition && !isDuplicateCenterNode(h, expandedCenterNodes)) {
-        expandedCenterNodes.push(h);
-      }
-    });
-  });
-
-  // 🔍 확장된 중심 노드 목록 출력
-  // console.log('🔎 확장된 중심 노드 목록 (중복 제거 + 레벨 조건 포함):');
-  // expandedCenterNodes.forEach((node, idx) => {
+  // console.log('🔑 키워드 기반 목록:');
+  // targetNodes.forEach((node, idx) => {
   //   console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
   // });
 
-   //중심 노드 제거: excludedMap 기준
-  const filteredCenterNodes = expandedCenterNodes.filter(h => {
-    const tag = h.tagName.toUpperCase(); // 항상 대문자로
-    const text = h.textContent.trim();
-    const excludedTexts = excludedMap.get(tag);
-
-    const shouldExclude = excludedTexts && (excludedTexts.includes('*') || excludedTexts.includes(text));
-    // if (shouldExclude) {
-    //   console.log(`🚫 제외된 중심 노드: [${tag}] "${text}"`);
-    // }
-    return !shouldExclude;
-  });
-
-  // 🔍 필터링 후 중심 노드 목록 출력
-  console.log('\n✅ 최종 중심 노드 목록 (제외 조건 적용됨):');
-  filteredCenterNodes.forEach((node, idx) => {
-    console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
-  });
-
-  const centerNodesSet = new Set(filteredCenterNodes);
-
-  let result = '';
-  const processedNodes = new Set();
-  const processedTexts = new Set();
-
-  for (const centerNode of filteredCenterNodes) {
-    //console.log(`\n📌 중심 노드 처리 시작: [${centerNode.tagName}] ${centerNode.textContent.trim()}`);
-
-    result += convertNodeToMarkdown(centerNode, turndownService, processedNodes, processedTexts);
-
-    const contentNodes = collectUntilNextCenter(centerNode, centerNodesSet, processedNodes);
-
-    for (const node of contentNodes) {
-      const preview = (node.textContent || '').trim().slice(0, 30);
-      //console.log(`  ↳ 처리 중인 노드: <${node.tagName || 'undefined'}> "${preview}..."`);
-      result += convertNodeToMarkdown(node, turndownService, processedNodes, processedTexts);
-    }
+  if (targetNodes.length === 0) {
+    throw new Error('❌ 키워드를 가진 노드를 찾을 수 없습니다. 마크다운 변환 불가.');
   }
-  
-  result = cleanMarkdownIfNeeded(bodyText, result);
 
+  const headingNodes = targetNodes.filter(node =>
+    /^H[1-6]$/.test(node.tagName.toUpperCase())
+  );
 
-  return result.trim();
+  if (headingNodes.length > 0) {
+    // ✅ 기존 방식 (h태그 중심 탐색 방식)
+    const allHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+
+    // 1) 키워드에 맞는 노드 필터링
+    const targetNodes = allHeadings.filter(h => isTargetSection(h.textContent.trim()));
+
+    // console.log('🔑 키워드 기반 중심 노드 목록:');
+    // targetNodes.forEach((node, idx) => {
+    //   console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+    // });
+
+    // 2) 중심 노드 확장: ±1 레벨 (네이버만), 아니면 동일 레벨만
+    const expandedCenterNodes = [];
+    const isNaver = htmlString.toLowerCase().includes('네이버 고객센터');
+    const excludedMap = getExcludedMap(htmlString);
+
+    targetNodes.forEach(baseNode => {
+      const baseLevel = parseInt(baseNode.tagName.replace('H', ''), 10);
+
+      allHeadings.forEach(h => {
+        const level = parseInt(h.tagName.replace('H', ''), 10);
+        const levelCondition = isNaver
+          ? Math.abs(level - baseLevel) <= 1
+          : level === baseLevel;
+
+        if (levelCondition && !isDuplicateCenterNode(h, expandedCenterNodes)) {
+          expandedCenterNodes.push(h);
+        }
+      });
+    });
+
+    const filteredCenterNodes = expandedCenterNodes.filter(h => {
+      const tag = h.tagName.toUpperCase();
+      const text = h.textContent.trim();
+      const excludedTexts = excludedMap.get(tag);
+      const shouldExclude = excludedTexts && (excludedTexts.includes('*') || excludedTexts.includes(text));
+      return !shouldExclude;
+    });
+
+    // console.log('\n✅ 최종 중심 노드 목록 (제외 조건 적용됨):');
+    // filteredCenterNodes.forEach((node, idx) => {
+    //   console.log(`${idx + 1}. [${node.tagName}] ${node.textContent.trim()}`);
+    // });
+
+    const centerNodesSet = new Set(filteredCenterNodes);
+    let result = '';
+    const processedNodes = new Set();
+    const processedTexts = new Set();
+
+    for (const centerNode of filteredCenterNodes) {
+      result += convertNodeToMarkdown(centerNode, turndownService, processedNodes, processedTexts);
+
+      const contentNodes = collectUntilNextCenter(centerNode, centerNodesSet, processedNodes);
+      for (const node of contentNodes) {
+        result += convertNodeToMarkdown(node, turndownService, processedNodes, processedTexts);
+      }
+    }
+    result = postProcessMarkdown(filteredCenterNodes, result, bodyText);
+
+    return cleanMarkdownIfNeeded(bodyText, result);
+
+  }
+  // H태그가 아닌 키워드 검색
+  else {
+    const turndownService = new TurndownService();
+    const processedNodes = new Set();
+    const processedTexts = new Set();
+
+    const markdowns = [];
+
+    for (const node of targetNodes) {
+      const textContent = node.textContent || '';
+      if (containsKeyword(textContent)) {
+        const md = convertNodeToMarkdown(node, turndownService, processedNodes, processedTexts).trim();
+        if (md) {
+          markdowns.push(md);
+          processedNodes.add(node);
+          processedTexts.add(normalizeTextForDuplicateCheck(textContent.trim()));
+        }
+      }
+    }
+
+    const filteredMarkdowns = markdowns.filter((md, i, arr) => {
+      const isIncluded = arr.some((other, j) => {
+        return i !== j && md !== other && md.length < other.length && other.includes(md);
+      });
+      return !isIncluded;
+    });
+
+    let result = filteredMarkdowns.join('\n\n');
+    return applySiteSpecificFiltering(bodyText, result);
+  }
 };
+
 
 module.exports = htmlToMarkdown;
