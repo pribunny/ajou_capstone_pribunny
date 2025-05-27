@@ -402,16 +402,19 @@ function showResult(summary, detect){
     const unfair_result = [];
 
     detect.data.results.forEach(item => {
-    if (Array.isArray(item.detectItems)) {
-        const unfairItems = item.detectItems.filter(di => di.isUnfair === true);
-        if (unfairItems.length > 0) {
-        unfair_result.push({
-            category: item.category,
-            detectItems: unfairItems
-        });
+        if (Array.isArray(item.detectItems)) {
+            const unfairItems = item.detectItems.filter(di => di.isUnfair === true);
+            unfairItems.forEach(di => {
+                unfair_result.push({
+                    category : di.category,
+                    problemStatement : di.problemStatement,
+                    reason : di.reason,
+                    legalBasis : di.legalBasis
+                });
+            });
         }
-    }
     });
+
     console.log("불공정 조항 데이터 필터링 결과 : ", unfair_result);
 
     if (unfair_result.length === 0) {
@@ -425,43 +428,38 @@ function showResult(summary, detect){
             item_container.style.marginBottom = '1em';
 
             const detect_category = document.createElement('span');
-            const rawCategory = item.category;
-            const readableCategory = categoryNameMap[rawCategory] || rawCategory;
+            const readableCategory = categoryNameMap[item.category] || item.category;
             detect_category.textContent = readableCategory;
             detect_category.style.fontWeight = 'bold';
             detect_category.style.display = 'block';
             item_container.appendChild(detect_category);
 
-            item.detectItems.forEach(subItem => {
-                const detect_content = document.createElement('div');
-                detect_content.style.wordBreak = 'break-word';
-                detect_content.style.whiteSpace = 'normal';
-                detect_content.style.maxWidth = '100%';
-                // detect_content.style.padding = '8px 12px';
+            const detect_content = document.createElement('div');
+            detect_content.style.wordBreak = 'break-word';
+            detect_content.style.whiteSpace = 'normal';
+            detect_content.style.maxWidth = '100%';
 
-                const detect_Statement = document.createElement('span');
-                detect_Statement.textContent = `문제 진술: ${subItem.problemStatement}`;
-                detect_Statement.style.display = 'block';
+            const detect_Statement = document.createElement('span');
+            detect_Statement.textContent = `문제 진술: ${item.problemStatement}`;
+            detect_Statement.style.display = 'block';
 
-                const detect_reason = document.createElement('span');
-                detect_reason.textContent = `이유: ${subItem.reason}`;
-                detect_reason.style.display = 'block';
+            const detect_reason = document.createElement('span');
+            detect_reason.textContent = `이유: ${subItem.reason}`;
+            detect_reason.style.display = 'block';
 
-                const detect_legalBasis = document.createElement('span');
-                detect_legalBasis.textContent = `법적 근거: ${subItem.legalBasis}`;
-                detect_legalBasis.style.display = 'block';
+            const detect_legalBasis = document.createElement('span');
+            detect_legalBasis.textContent = `법적 근거: ${subItem.legalBasis}`;
+            detect_legalBasis.style.display = 'block';
 
-                detect_content.appendChild(detect_Statement);
-                detect_content.appendChild(detect_reason);
-                detect_content.appendChild(detect_legalBasis);
-                item_container.appendChild(detect_content);
-            });
+            detect_content.appendChild(detect_Statement);
+            detect_content.appendChild(detect_reason);
+            detect_content.appendChild(detect_legalBasis);
+            item_container.appendChild(detect_content);
 
             detect_element.appendChild(item_container);
-            });
+        });
 
-            detect_all_elements.appendChild(detect_element);
-
+        detect_all_elements.appendChild(detect_element);
     }
 
 
@@ -500,7 +498,7 @@ function showResult(summary, detect){
     // '요약 결과가 없습니다. 개인정보처리방침 및 수집이용동의서가 맞는지 확인해주세요!' 문구 출력
     // summarize_content가 빈 문자열이거나 undefined/null인 경우 제외
     const summary_result = summary.data.results.filter(item => {
-        return item.summaryItems.length > 0 && item.summaryItems[0].summarize_content?.trim();
+        return item.summaryItems.some(si => si.summarize_content?.trim());
     });
 
     // 아무 내용도 없을 경우 메시지 출력
@@ -513,23 +511,24 @@ function showResult(summary, detect){
     else{
         summary_result.forEach(item => { //각각의 데이터를 하나씩 출력한다.
             console.log("[summary 결과 : items] : ", item);
+            item.summaryItems.forEach(subItem => {
+                const rawCategory = subItem.category_name;
+                const readableCategory = categoryNameMap[rawCategory] || rawCategory;  // 매핑 없으면 원래 값 그대ro!
+                const summary_category = document.createElement('span');
+                summary_category.textContent = readableCategory;
+                summary_category.style.fontWeight = 'bold'; // ✅ 여기 추가
 
-            const rawCategory = item.summaryItems[0].category_name;
-            const readableCategory = categoryNameMap[rawCategory] || rawCategory;  // 매핑 없으면 원래 값 그대ro!
-            const summary_category = document.createElement('span');
-            summary_category.textContent = readableCategory;
-            summary_category.style.fontWeight = 'bold'; // ✅ 여기 추가
+                const summary_content = document.createElement('p');
+                summary_content.style.wordBreak = 'break-word';
+                summary_content.style.overflowWrap = 'break-word';
+                summary_content.style.whiteSpace = 'normal';
+                summary_content.style.maxWidth = '100%';
+                summary_content.textContent = subItem.summarize_content;
 
-            const summary_content = document.createElement('p');
-            summary_content.style.wordBreak = 'break-word';
-            summary_content.style.overflowWrap = 'break-word';
-            summary_content.style.whiteSpace = 'normal';
-            summary_content.style.maxWidth = '100%';
-            summary_content.textContent = `${item.summaryItems[0].summarize_content}`;
-
-            //생성한 요소를 추가한다.
-            summary_element.appendChild(summary_category);
-            summary_element.appendChild(summary_content);
+                //생성한 요소를 추가한다.
+                summary_element.appendChild(summary_category);
+                summary_element.appendChild(summary_content);
+            });
             summary_all_elements.appendChild(summary_element);
         });
     }
