@@ -286,28 +286,24 @@ export default function ResultPage() {
 
         {/* 불공정약관 내용 */}
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-5">
-        {(() => {
-            const filtered = unfairItems.filter(
-            item => Array.isArray(item.detectedItems) && item.detectedItems.some(d => d.isUnfair)
-            );
-            const categories = [...new Set(filtered.map(item => item.category))];
+            {(() => {
+                const detectCategory = unfairItems.flatMap(item => item.detectItems).filter(it => it.isUnfair).map(it => it.category);
 
-            console.log("🟥 전체 unfairItems:", unfairItems);
-            console.log("🟥 isUnfair === true 항목:", filtered);
-            console.log("🟥 category 목록:", categories);
+                console.log("🟥 전체 unfairItems:", unfairItems);
+                console.log("🟥 isUnfair === true 항목, category 이름 :", detectCategory);
 
-            if (filtered.length > 0) {
-            return (
-                <p>
-                <strong>{categories.map(key => categoryNameMap[key] || key).join(', ')}</strong>
-                {" 에서 불공정약관을 찾았습니다!"}
-                </p>
-            );
-            } else {
-            //return null;
-            return <p>탐지된 불공정 조항이 없습니다!</p>;
-            }
-        })()}
+                if (detectCategory.length > 0) {
+                    return (
+                        <p>
+                        <strong>{detectCategory.map(key => categoryNameMap[key] || key).join(', ')}</strong>
+                        {" 에서 불공정약관을 찾았습니다!"}
+                        </p>
+                    );
+                } else {
+                    //return null;
+                    return <p>탐지된 불공정 조항이 없습니다!</p>;
+                }
+            })()}
         </div>
 
         {/* 요약 제목 */}
@@ -340,32 +336,38 @@ export default function ResultPage() {
         {/* 요약 내용 */}
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
         {summaryItems.map((item, idx) => {
-            const categoryName = categoryNameMap[item.category];
 
-            // ✅ 조건: 사전 정의 항목 + 사용자 설정 항목(wantedPhrases)
-            if (
-            categoryName !== "개인정보 처리 목적" &&
-            categoryName !== "처리하는 개인정보의 항목" &&
-            !wantedPhrases.includes(categoryName)
-            ) return null;
+            const filteredSummaries = item.summaryItems.filter(summary =>{
+                const categoryName = categoryNameMap[summary.category_name];
+                return(
+                    categoryName !== "개인정보 처리 목적" &&
+                    categoryName !== "처리하는 개인정보의 항목" &&
+                    !wantedPhrases.includes(categoryName)
+                );
+            });
+
+            if(filteredSummaries.length === 0) return null;
 
             return (
-            <div key={idx} className="mb-5">
-                {item.summaryItems.map((summary, sIdx) => (
-                <div key={sIdx} className="mb-3">
-                    <strong>{categoryName}</strong><br />
-                    {categoryName === "처리하는 개인정보의 항목"
-                    ? highlightMatchedTerms(summary.summarize_content, userPrivacyItems)
-                    : summary.summarize_content}
+                <div key={idx} className="mb-5">
+                    {filteredSummaries.map((summary, sIdx) => (
+                        const categoryName = categoryNameMap[summary.category_name];
+                        return(
+                            <div key={sIdx} className="mb-3">
+                                <strong>{categoryName}</strong><br />
+                                {categoryName === "처리하는 개인정보의 항목"
+                                ? highlightMatchedTerms(summary.summarize_content, userPrivacyItems)
+                                : summary.summarize_content}
+                            </div>
+                        );
+                    ))}
                 </div>
-                ))}
-            </div>
             );
         })}
         </div>
-        </div>
-         </>
-                )}
+    </div>
+     </>
+            )}
         </div>
     );
 }

@@ -96,37 +96,29 @@ export default function ResultUnfairDetail() {
               </div>
             ))}
         </div> */}
-        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
-          {(() => {
-            const filtered = unfairItems.filter(
-              item => Array.isArray(item.detectedItems) && item.detectedItems.some(d => d.isUnfair)
-            );
+            <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
+                {(() => {
+                    const filter = unfairItems.flatMap(item => item.unfairItems).filter(it => it.isUnfair);
 
-            if (filtered.length === 0) {
-              return <p className="text-gray-600">탐지된 불공정 조항이 없습니다!</p>;
-            }
+                    if (filter.length === 0) {
+                        return <p className="text-gray-600">탐지된 불공정 조항이 없습니다!</p>;
+                    }
 
-            return filtered.map((item, idx) => (
-              <div key={idx} className="mb-4">
-                <strong className="block mb-1 text-base font-semibold">
-                  {categoryNameMap[item.category] || item.category}
-                </strong>
+                    return filter.map((detect, idx) => (
+                        <div key={idx} className='mb-4'>
+                            <strong className="block mb-1 text-base font-semibold">
+                                {categoryNameMap[detect.category] || detect.category}
+                            </strong>
+                            <div className="mb-2">
+                                <p className="mb-1"><strong>문제 진술:</strong> {detect.problemStatement}</p>
+                                <p className="mb-1"><strong>사유:</strong> {detect.reason}</p>
+                                <p className="mb-1 text-xs text-gray-600"><strong>법적 근거:</strong> {detect.legalBasis}</p>
+                            </div>
+                        </div>
 
-                {item.detectedItems
-                  .filter(d => d.isUnfair)
-                  .map((detect, dIdx) => (
-                    <div key={dIdx} className="mb-2">
-                      <p className="mb-1"><strong>문제 진술:</strong> {detect.problemStatement}</p>
-                      <p className="mb-1"><strong>사유:</strong> {detect.reason}</p>
-                      <p className="mb-1 text-xs text-gray-600"><strong>법적 근거:</strong> {detect.legalBasis}</p>
-                    </div>
-                  ))}
-              </div>
-            ));
-          })()}
-        </div>
-
-
+                    ));
+                })()}
+            </div>
       </div>
     </div>
   );

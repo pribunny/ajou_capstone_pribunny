@@ -127,25 +127,44 @@ export default function ResultSummaryDetail() {
             </div>
           ))}
         </div> */}
-        <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
-          {summaryItems.map((item, idx) => {
-            const categoryName = categoryNameMap[item.category] || item.category;
-              return (
-                <div key={idx} className="mb-5">
-                  {item.summaryItems.map((summary, sIdx) => (
-                    <div key={sIdx} className="mb-3">
-                      <strong className="block mb-1">{categoryName}</strong>
-                      {categoryName === "처리하는 개인정보의 항목"
-                        ? highlightMatchedTerms(summary.summarize_content, userPrivacyItems)
-                        : summary.summarize_content.split('\n').map((line, i) => (
-                            <p key={i} className="m-0 p-0 leading-snug">{line}</p>
-                          ))}
+{/*         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4"> */}
+{/*           {summaryItems.map((item, idx) => { */}
+{/*             const categoryName = categoryNameMap[item.category] || item.category; */}
+{/*               return ( */}
+{/*                 <div key={idx} className="mb-5"> */}
+{/*                   {item.summaryItems.map((summary, sIdx) => ( */}
+{/*                     <div key={sIdx} className="mb-3"> */}
+{/*                       <strong className="block mb-1">{categoryName}</strong> */}
+{/*                       {categoryName === "처리하는 개인정보의 항목" */}
+{/*                         ? highlightMatchedTerms(summary.summarize_content, userPrivacyItems) */}
+{/*                         : summary.summarize_content.split('\n').map((line, i) => ( */}
+{/*                             <p key={i} className="m-0 p-0 leading-snug">{line}</p> */}
+{/*                           ))} */}
+{/*                     </div> */}
+{/*                   ))} */}
+{/*                 </div> */}
+{/*               ); */}
+{/*           })} */}
+{/*         </div> */}
+            <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
+                {summaryItems.map((item, idx) => {
+                    <div key={idx} className="mb-5">
+                        {item.summaryItems.map((summary,sIdx) => {
+                            const categoryName = categoryNameMap[summary.category_name] || summary.category_name;
+                            return(
+                                <div key={sIdx} className="mb-3">
+                                    <strong className="block mb-1">{categoryName}</strong>
+                                    {categoryName === "처리하는 개인정보의 항목"
+                                        ? highlightMatchedTerms(summary.summarize_content, userPrivacyItems)
+                                        : summary.summarize_content.split('\n').map((line, i) => (
+                                            <p key={i} className="m-0 p-0 leading-snug">{line}</p>
+                                    ))}
+                                </div>
+                            );
+                        })}
                     </div>
-                  ))}
-                </div>
-              );
-          })}
-        </div>
+                })}
+            </div>
       </div>
     </div>
   );
