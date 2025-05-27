@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
 import HomeIcon from '../assets/home-button.png';
@@ -17,6 +17,7 @@ export default function ResultPage() {
     const [unfairItems, setUnfairItems] = useState([]);
     const [userPrivacyItems, setUserPrivacyItems] = useState([]);
     const [wantedPhrases, setWantedPhrases] = useState([]);
+    const hasUploadedRef = useRef(false);
     const [key, setKey] = useState("");
 
     useEffect(() => {
@@ -32,6 +33,12 @@ export default function ResultPage() {
 
             // HTML 데이터 처리 함수
             const getHtmlSource = async (htmlText) => {
+                if(hasUploadedRef.current){
+                    console.log("[getHtmlSource] : 중복 데이터 요청 막음");
+                    return;
+                } //중복으로 요청이 가는 것을 막기 위함
+                hasUploadedRef.current = true;
+
                 try {
                     // 1. 텍스트 파일 생성
                     const cleanHTML = DOMPurify.sanitize(htmlText); //여기 content.js 코드 수정하기
@@ -68,7 +75,16 @@ export default function ResultPage() {
             const handleMessage = (request) => {
                 if (request.action === "take_full_data") {
                     console.log("[ResultPage] 받은 텍스트:", request.source);
-                    getHtmlSource(request.source);
+
+                    const cachedSummary = sessionStorage.getItem('summaryItems');
+                    const cachedUnfair = sessionStorage.getItem('unfairItems');
+
+                    if (cachedSummary && cachedUnfair) {
+                        console.log("🟢 캐시 존재 → 업로드 및 요청 생략");
+                        return;
+                    }
+
+                    getHtmlSource(request.source); //캐시 없을 경우에만 진행
                 }
             };
 

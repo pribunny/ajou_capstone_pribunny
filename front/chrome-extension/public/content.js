@@ -11,18 +11,23 @@
 
 
 
-// Listner로 'get_full_data' 요청 기다리기
-// 요청이 들어오면, 전체 html중 <body> 태그 안 데이터 긁어서 Listner로 전달
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("[GET Full Data] 실행");
-    if (request.action === "give_full_data") {
-        console.log("📨 요청 받음 → 텍스트 전송");
-        chrome.runtime.sendMessage({
-            action: "take_full_data",
-            source : document.body.outerHTML, //body HTML 데이터 가져오기
-        });
-    }
-});
+if (window.top !== window.self) {
+    console.log("🚫 iframe 내 실행 차단됨");
+} else {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        console.log("[GET Full Data] 실행");
+
+        if (request.action === "give_full_data") {
+            console.log("📨 요청 받음 → 텍스트 전송");
+
+            chrome.runtime.sendMessage({
+                action: "take_full_data",
+                source: document.body.outerHTML,
+            });
+        }
+    });
+}
+
 
 const fontStyle = document.createElement('style'); //글꼴 - noto Sans
 fontStyle.textContent = `
@@ -59,8 +64,8 @@ document.addEventListener('mouseup', (e) => {
                 button.src = chrome.runtime.getURL('extension_logo.png');  // ← 확장 프로그램 내 이미지 경로
                 button.alt = '분석하기';
                 button.style.position = 'absolute';
-                button.style.top = `${e.clientY}px`;
-                button.style.left = `${e.clientX}px`; // 마우스 이시키 디질라고 너 다시 보자.
+                button.style.top = `${e.pageY}px`;
+                button.style.left = `${e.pageX}px`;
                 button.style.zIndex = '999999';
                 button.style.width = '25px';   // 적절한 크기 조절
                 button.style.height = '25px';
@@ -143,9 +148,17 @@ function showLoading(){
     result.style.boxShadow = '0px 0px 10px rgba(0,0,0,0.2)';
     result.style.borderRadius = '8px';
 
+    //result 요소 최소 크기 지정
+    result.style.minWidth = '300px';
+    result.style.minHeight = '120px';
+    result.style.overflow = 'auto'; //내용이 너무 많아지면 스크롤
+
     const loadingMsg = document.createElement('div');
     loadingMsg.style.fontFamily = 'Noto Sans KR, sans-serif', //폰트 추가
     loadingMsg.textContent = '데이터를 분석하고 있습니다...';
+    loadingMsg.style.textAlign = 'center';
+    loadingMsg.style.fontWeight = 'bold';
+    loadingMsg.style.marginBottom = '18px'; // ✅ 여백 추가
     result.appendChild(loadingMsg);
 
     // CSS 스피너 생성
@@ -169,6 +182,11 @@ function showLoading(){
     }
 
     result.appendChild(dotsContainer);
+    const loadingLegalMsg = document.createElement('div');
+    loadingLegalMsg.style.fontFamily = 'Noto Sans KR, sans-serif', //폰트 추가
+    loadingLegalMsg.textContent = '이 탐지 결과는 정보 제공을 위한 것이며, 법적 판단이나 자문을 대체하지 않습니다.';
+    loadingLegalMsg.style.marginTop = '18px'; // ✅ 여백 추가
+    result.appendChild(loadingLegalMsg);
 
     // 스피너 애니메이션을 위한 스타일 정의
     const style = document.createElement('style');
@@ -217,6 +235,12 @@ function showError(error_res) {
         result.style.maxWidth = '400px';
         result.style.boxShadow = '0px 0px 10px rgba(0,0,0,0.2)';
         result.style.borderRadius = '8px';
+
+        //result 요소 최소 크기 지정
+        result.style.minWidth = '300px';
+        result.style.minHeight = '120px';
+        result.style.overflow = 'auto'; //내용이 너무 많아지면 스크롤
+
         document.body.appendChild(result);
     }
 
