@@ -287,9 +287,9 @@ export default function ResultPage() {
         {/* 불공정약관 내용 */}
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-5">
             {(() => {
-                const detectCategory = unfairItems.flatMap(item => item.detectItems).filter(it => it.isUnfair).map(it => it.category);
-
                 console.log("🟥 전체 unfairItems:", unfairItems);
+
+                const detectCategory = unfairItems.flatMap(item => item.detectedItems).filter(it => it.isUnfair).map(it => it.category);
                 console.log("🟥 isUnfair === true 항목, category 이름 :", detectCategory);
 
                 if (detectCategory.length > 0) {
@@ -337,8 +337,11 @@ export default function ResultPage() {
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
         {summaryItems.map((item, idx) => {
 
+            console.log("🟥 전체 summaryItems:", summaryItems);
+
             const filteredSummaries = item.summaryItems.filter(summary =>{
                 const categoryName = categoryNameMap[summary.category_name];
+                console.log("🟥 categoryName:", categoryName);
                 return(
                     categoryName !== "개인정보 처리 목적" &&
                     categoryName !== "처리하는 개인정보의 항목" &&
@@ -350,7 +353,7 @@ export default function ResultPage() {
 
             return (
                 <div key={idx} className="mb-5">
-                    {filteredSummaries.map((summary, sIdx) => (
+                    {filteredSummaries.map((summary, sIdx) => {
                         const categoryName = categoryNameMap[summary.category_name];
                         return(
                             <div key={sIdx} className="mb-3">
@@ -360,7 +363,7 @@ export default function ResultPage() {
                                 : summary.summarize_content}
                             </div>
                         );
-                    ))}
+                    })}
                 </div>
             );
         })}
