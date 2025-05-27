@@ -2,28 +2,26 @@ import app.prompts.summariz_category_prompt as sp
 from app.prompts.unfair_clause_prompt import *
 
 PROMPT_SUM_MAP = {
-    "processingPurpose": sp.summary_purpose_template,
-    "collectedItems": sp.summary_items_template,
-    "childrenUnder14": sp.summary_children_under_14_template, # 추가
-    "retentionPeriod": sp.summary_retention_period_template,
-    "destructionProcedure": sp.summary_destruction_template,
+    "processingInfo" : sp.summary_processing_info_template,
+    "storageDeletion" : sp.summary_storage_deletion_template,
+    "userProtection" : sp.summary_user_protection_template,
     "thirdPartySharing": sp.summary_third_party_template,
-    "additionalUseCriteria": sp.summary_additional_use_template,
     "outsourcingInfo": sp.summary_outsourcing_template,
     "overseasTransfer": sp.summary_overseas_transfer_template,
     "securityMeasures": sp.summary_security_measures_template,
-    "sensitiveInfoDisclosure": sp.summary_sensitive_info_template,
-    "pseudonymizedInfo": sp.summary_pseudonymized_info_template, # 추가
     "autoCollectionDevices": sp.summary_auto_collection_template,
     "behavioralTrackingByThirdParties": sp.summary_behavior_tracking_template,
     "dataSubjectRights": sp.summary_rights_and_methods_template,
-    "privacyOfficerInfo": sp.summary_privacy_officer_template,
-    "domesticAgent": sp.summary_domestic_agent_template, # 추가
-    "remedyForInfringement": sp.summary_remedy_template, # 추가
-    "fixedCCTVOperation": sp.summary_fixed_cctv_template, # 추가
-    "mobileCCTVOperation": sp.summary_mobile_cctv_template, # 추가
-    "optionalPrivacyClauses": sp.summary_optional_clauses_template, # 추가
-    "policyChanges": sp.summary_policy_changes_template,
+    #"remedyForInfringement": sp.summary_remedy_template,
+    #"additionalUseCriteria": sp.summary_additional_use_template,
+    #"sensitiveInfoDisclosure": sp.summary_sensitive_info_template, #삭제
+    #"pseudonymizedInfo": sp.summary_pseudonymized_info_template, # 삭제
+    #"privacyOfficerInfo": sp.summary_privacy_officer_template, #삭제
+    #"domesticAgent": sp.summary_domestic_agent_template, # 삭제
+    #"fixedCCTVOperation": sp.summary_fixed_cctv_template, # 삭제
+    #"mobileCCTVOperation": sp.summary_mobile_cctv_template, # 삭제
+    #"optionalPrivacyClauses": sp.summary_optional_clauses_template, # 삭제
+    # "policyChanges": sp.summary_policy_changes_template, #삭제
 }
 
 def get_summary_detect(category: str):
