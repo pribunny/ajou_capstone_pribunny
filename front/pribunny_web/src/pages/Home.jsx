@@ -6,7 +6,7 @@ import StartIcon from '../assets/start-button.png';
 import MainImg_file from '../assets/main_bunny.png';
 import MainImg from '../assets/main_bunny_2.jpg';
 
-import Addfile from '../components/Addfile';
+import Addfile from '../components/AddFile';
 import {getPresignedUrl, uploadToS3, notifyServer} from '../services/uploadFile.js'
 import App from '../App';
 

@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // 헬스 체크 라우터 (ALB 상태 확인용)
-app.get("/", (req, res) => {
+app.get("/health", (req, res) => {
     res.status(200).send("Hello, world");
 });
 
