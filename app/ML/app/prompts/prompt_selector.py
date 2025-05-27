@@ -2,12 +2,12 @@ import app.prompts.summariz_category_prompt as sp
 from app.prompts.unfair_clause_prompt import *
 
 PROMPT_SUM_MAP = {
-    "processingPurpose" : sp.summary_processing_info_template,
-    "collectedItems" : sp.summary_processing_info_template,
-    "destructionProcedure" : sp.summary_storage_deletion_template,
-    "retentionPeriod" : sp.summary_storage_deletion_template,
-    "privacyOfficerInfo" : sp.summary_user_protection_template,
-    "remedyForInfringement" : sp.summary_user_protection_template,
+    "processingInfo" : sp.summary_processing_info_template,
+    # "collectedItems" : sp.summary_processing_info_template,
+    "storageDeletion" : sp.summary_storage_deletion_template,
+    # "retentionPeriod" : sp.summary_storage_deletion_template,
+    "userProtection" : sp.summary_user_protection_template,
+    # "remedyForInfringement" : sp.summary_user_protection_template,
     "thirdPartySharing": sp.summary_third_party_template,
     "outsourcingInfo": sp.summary_outsourcing_template,
     "overseasTransfer": sp.summary_overseas_transfer_template,
@@ -28,15 +28,15 @@ PROMPT_SUM_MAP = {
 }
 
 def get_summary_detect(category: str):
-    return PROMPT_SUM_MAP.get(category)
+    return PROMPT_SUM_MAP.get(category, sp.summary_third_party_template)
 
 PROMPT_DET_MAP = {
-    "processingPurpose" : unfair_detect_processing_info_template, #수정 _ processing_info
-    "collectedItems" : unfair_detect_processing_info_template, #수정 _ processing_info
-    "destructionProcedure" : unfair_detect_storage_deletion_template, #수정 _ storage_deletion
-    "retentionPeriod" : unfair_detect_storage_deletion_template, #수정 _ storage_deletion
-    "privacyOfficerInfo" : unfair_detect_user_protection_template, #수정 _ user_protection
-    "remedyForInfringement" : unfair_detect_user_protection_template, #수정 _ user_protection
+    "processingInfo" : unfair_detect_processing_info_template, #수정 _ processing_info
+    # "collectedItems" : unfair_detect_processing_info_template, #수정 _ processing_info
+    "storageDeletion" : unfair_detect_storage_deletion_template, #수정 _ storage_deletion
+    # "retentionPeriod" : unfair_detect_storage_deletion_template, #수정 _ storage_deletion
+    "userProtection" : unfair_detect_user_protection_template, #수정 _ user_protection
+    # "remedyForInfringement" : unfair_detect_user_protection_template, #수정 _ user_protection
     #"processing_info": unfair_detect_processing_info_template,
     #"collectedItems": unfair_detect_items_template,
     #"childrenUnder14": unfair_detect_children_under_14_template, # 추가

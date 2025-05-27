@@ -12,7 +12,7 @@ def search_context(query):
     result = law_client.search(
         data=[query_vector],
         anns_field="vector",
-        param={"metric_type": "L2", "params": {"nprobe": 10}},
+        param={"metric_type": "COSINE", "params": {"nprobe": 10}},
         output_fields=["text", "law_name", "chapter", "section", "clause_title"],
         limit=5
     )

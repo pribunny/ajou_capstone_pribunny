@@ -75,8 +75,18 @@ async def detect_unfair_clause(request: DetectRequest):
 
         results = []
         for cat, paras in category_to_contexts.items():
+            if cat == "unknown":
+                print(f"[SKIP] unknown 카테고리 문단 {len(paras)}개 무시")
+                continue
+
             result = await detect_paragraph(cat, paras)
             results.append(result)
+
+        if not results:
+            raise HTTPException(
+                status_code=400,
+                detail="입력된 내용이 올바르지 않습니다."
+            )
 
         detect_data = DetectData(
             documentId=doc_id,

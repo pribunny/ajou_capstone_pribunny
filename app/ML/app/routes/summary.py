@@ -33,8 +33,12 @@ async def summarize_privacy_policy(request: SummaryRequest):
     try:
         doc_id = request.documentId
 
+        print("dljkdljfhljdhlfj")
+
         contexts = TextBatch(texts = request.contexts)
         category_mapping = get_category_classify(contexts)
+
+        print(category_mapping)
 
         category_to_contexts = defaultdict(list)
         for i, cat_result in enumerate(category_mapping["results"]):
@@ -70,8 +74,18 @@ async def summarize_privacy_policy(request: SummaryRequest):
 
         results = []
         for cat, paras in category_to_contexts.items():
+            if cat == "unknown":
+                print(f"[SKIP] unknown 카테고리 문단 {len(paras)}개 무시")
+                continue
+
             result = await summarize_paragraph(cat, paras)
             results.append(result)
+
+        if not results:
+            raise HTTPException(
+                status_code=400,
+                detail="입력된 내용이 올바르지 않습니다."
+            )
 
         summary_data = SummaryData(
             documentId=doc_id,
