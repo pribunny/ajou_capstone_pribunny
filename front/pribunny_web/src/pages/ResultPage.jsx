@@ -150,7 +150,7 @@ export default function ResultPage() {
                     {/* 헤더 - pribunny, 홈 버튼 */}
                     <div className="w-full relative flex justify-center items-center mb-6">
                         <h2 className="text-2xl md:text-3xl font-bold">PRIBUNNY</h2>
-                        <button onClick={goHome} className="absolute right-4 md:right-0">
+                        <button onClick={goHome} className="absolute right-4 md:right-0 bg-yellow-01">
                             <img src={HomeIcon} alt="home_icon" className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
                     </div>
