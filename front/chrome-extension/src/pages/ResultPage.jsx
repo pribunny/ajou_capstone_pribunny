@@ -337,17 +337,19 @@ export default function ResultPage() {
         <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
         {summaryItems.map((item, idx) => {
 
-            console.log("🟥 전체 summaryItems:", summaryItems);
+            console.log("🟥 전체 summaryItems:", item);
 
             const filteredSummaries = item.summaryItems.filter(summary =>{
                 const categoryName = categoryNameMap[summary.category_name];
                 console.log("🟥 categoryName:", categoryName);
                 return(
-                    categoryName !== "개인정보 처리 목적" &&
-                    categoryName !== "처리하는 개인정보의 항목" &&
-                    !wantedPhrases.includes(categoryName)
+                    categoryName === "개인정보 처리 목적" ||
+                    categoryName === "처리하는 개인정보의 항목" ||
+                    wantedPhrases.includes(categoryName)
                 );
             });
+
+            console.log("filteredSummaries : ", filteredSummaries);
 
             if(filteredSummaries.length === 0) return null;
 

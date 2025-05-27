@@ -98,7 +98,7 @@ export default function ResultUnfairDetail() {
         </div> */}
             <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">
                 {(() => {
-                    const filter = unfairItems.flatMap(item => item.unfairItems).filter(it => it.isUnfair);
+                    const filter = unfairItems.flatMap(item => item.detectedItems).filter(it => it.isUnfair);
 
                     if (filter.length === 0) {
                         return <p className="text-gray-600">탐지된 불공정 조항이 없습니다!</p>;
