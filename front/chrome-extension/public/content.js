@@ -447,7 +447,6 @@ function showResult(summary, detect){
             detect_legalBasis.textContent = `법적 근거: ${item.legalBasis}`;
             detect_legalBasis.style.display = 'block';
 
-            detect_content.appendChild(detect_Statement);
             detect_content.appendChild(detect_reason);
             detect_content.appendChild(detect_legalBasis);
             item_container.appendChild(detect_content);
