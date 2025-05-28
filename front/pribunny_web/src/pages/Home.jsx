@@ -51,7 +51,7 @@ export default function Home(){
     return (
         <div className="bg-yellow-01 w-screen h-screen flex flex-col items-center justify-center">
             <div className='text-center mb-4 mt-6'>
-                <h2 className='text-3xl font-bold py-2 text-black'>PRIBUNNY</h2>
+                <h2 className='text-3xl font-bold py-2 text-black'>PRIBUDDY</h2>
                 <p className='py-2 text-black'>개인정보처리방침 및 수집이용동의서 분석 및 요약 서비스</p>
             </div>
             <div>

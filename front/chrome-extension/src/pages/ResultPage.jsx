@@ -237,7 +237,7 @@ export default function ResultPage() {
             <img src={SetIcon} alt="Setting" className="w-[26px] h-[26px]" />
         </button>
         <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
-            PRIBUNNY
+            PRIBUDDY
         </h2>
         <button onClick={() => navigate('/')} className="absolute right-0 w-[26px] h-[26px]">
             <img src={HomeIcon} alt="Home" className="w-[26px] h-[26px]" />

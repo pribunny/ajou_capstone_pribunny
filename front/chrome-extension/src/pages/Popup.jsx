@@ -31,7 +31,8 @@ export default function Popup() {
 
         {/* 제목 */}
         <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
-            PRIBUNNY
+            PRIBUDD
+            Y
         </h2>
 
         {/* 홈 버튼 */}
@@ -44,7 +45,7 @@ export default function Popup() {
 
         {/* 메인 콘텐츠 */}
         <div className="flex-1 flex flex-col justify-center items-center">
-            <img src={MainImg} alt="Pribunny" className="w-[278px] h-[189px] mt-8 mb-8" />
+            <img src={MainImg} alt="Pribuddy" className="w-[278px] h-[189px] mt-8 mb-8" />
             {/* <div className="text-center text-sm mb-12 font-serif">
             <p>우리의 똑똑한 토끼가 탐색을 도와줄거예요.</p>
             <p>개인정보처리방침, 수집이용동의서 내용 확인하기</p>

@@ -26,7 +26,7 @@ export default function ErrorPage() {
 
       {/* 제목 */}
       <h2 className="text-[18px] font-bold font-['Noto_Sans'] text-center">
-          PRIBUNNY
+          PRIBUDDY
       </h2>
 
       {/* 홈 버튼 */}
