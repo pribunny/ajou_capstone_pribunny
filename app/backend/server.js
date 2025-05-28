@@ -18,8 +18,8 @@ const allowedOrigins = [
 	'chrome-extension://apfmabbldnefhlghehokhaifpfhcahbi',
 	'http://localhost:5173',
 	'http://127.0.0.1:3000',
-	'https://pribuddy.shop/',
-	'http://pribuddy.shop/'
+	'https://pribuddy.shop',
+	'http://pribuddy.shop'
 ];
 
 app.use(cors({
