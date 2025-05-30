@@ -101,7 +101,7 @@ export default function ResultPage() {
                     );
 
                 const unfair_data = results
-                    .filter(item => Array.isArray(item.detectItems))
+                    .filter(item => Array.isArray(item.detectedItems))
                     .flatMap(item =>
                         item.detectedItems
                             .filter(detect => detect.isUnfair === true)
