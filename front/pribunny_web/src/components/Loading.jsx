@@ -7,7 +7,7 @@ const Loading = () => {
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-start bg-yellow-01 p-10">
             <div className='w-full flex items-center justify-center mt-6 relative mb-2'>
-                <h2 className='text-3xl font-bold py-2'>PRIBUNNY</h2>
+                <h2 className='text-3xl font-bold py-2'>PRIBUDDY</h2>
             </div>
             <div className ="flex-1 flex flex-col justify-center">
                 <img src={LoadingImage} alt="Loading.." className="w-[350px] h-auto mx-auto"/>
