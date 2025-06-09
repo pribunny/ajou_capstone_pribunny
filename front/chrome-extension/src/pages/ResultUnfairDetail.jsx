@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SetIcon from '../assets/setting-button.png';
 import HomeIcon from '../assets/home-button.png';
 import BackIcon from '../assets/back-button.png';
+import DeclareIcon from '../assets/declare-button.png'
 import { useLocation } from 'react-router-dom';
 
 export default function ResultUnfairDetail() {
@@ -55,13 +56,23 @@ export default function ResultUnfairDetail() {
       {/* 뒤로가기 + 출력 전체 묶음 - 스크롤 가능 */}
       <div className="w-full flex-1 overflow-y-auto mt-2 px-1">
 
-        {/* 뒤로가기 버튼 */}
-        <button
-          onClick={() => navigate('/start')}
-          className="w-[31px] h-[31px] bg-transparent flex items-center justify-center mb-3"
-        >
-          <img src={BackIcon} alt="뒤로가기" className="w-[31px] h-[31px]" />
-        </button>
+        <div className = 'relative flex items-center justify-center h-[40px]'>
+            {/* 뒤로가기 버튼 */}
+            <button
+              onClick={() => navigate('/start')}
+              className="w-[31px] h-[31px] bg-transparent absolute left-0 mb-3"
+            >
+              <img src={BackIcon} alt="뒤로가기" className="w-[31px] h-[31px]" />
+            </button>
+
+            {/* 신고하기 버튼 */}
+            <button
+                onClick = {() => navigate('/declare')}
+                className="w-[31px] h-[31px] bg-transparent absolute right-0 mb-3"
+            >
+                <img src={DeclareIcon} alt="신고하기" className="w-[31px] h-[31px]" />
+            </button>
+        </div>
 
         {/* 상세 내용 */}
         {/* <div className="bg-white w-full text-sm px-4 py-3 whitespace-pre-wrap text-left rounded-lg border mb-4">

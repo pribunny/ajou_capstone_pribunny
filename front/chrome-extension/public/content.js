@@ -370,9 +370,36 @@ function showResult(summary, detect){
 
 
     const detect_all_elements = document.createElement('div');
+
     const detect_header = document.createElement('div');
     const detect_title = document.createElement('h4');
     detect_title.textContent = '불공정 조항';
+
+    const tooltipIcon = document.createElement('span');
+    tooltipIcon.textContent = 'ⓘ';
+    tooltipIcon.style.marginLeft = '8px';
+    tooltipIcon.style.cursor = 'pointer';
+    tooltipIcon.title = '온라인 신고는 "KISA 개인정보 침해 센터"에서 가능합니다.';
+
+    tooltipIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open('https://privacy.kisa.or.kr/counsel/privacy/report_step00.do', '_blank');
+    });
+
+    detect_title.style.margin = '0';
+    detect_title.style.display = 'flex';
+    detect_title.style.alignItems = 'center';
+
+    // → 감싸는 div를 하나 만들어 title + icon을 같이 배치
+    const titleWithTooltip = document.createElement('div');
+    titleWithTooltip.style.display = 'flex';
+    titleWithTooltip.style.alignItems = 'center';
+
+    titleWithTooltip.appendChild(detect_title);
+    titleWithTooltip.appendChild(tooltipIcon);
+
+    detect_header.appendChild(titleWithTooltip);
+
 
     detect_header.style.backgroundColor="#FFFBCA"
     detect_header.style.border = '1px solid #aaa';
@@ -387,7 +414,7 @@ function showResult(summary, detect){
     detect_header.style.justifyContent = 'center';
 
 
-    detect_header.appendChild(detect_title);
+    //detect_header.appendChild(detect_title);
     detect_all_elements.appendChild(detect_header);
 
     const detect_element = document.createElement('div');
