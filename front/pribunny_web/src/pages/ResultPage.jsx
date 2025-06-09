@@ -2,13 +2,13 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HomeIcon from '../assets/home-button.png';
+import DeclareIcon from '../assets/declare-button.png'
 import { useLocation } from 'react-router-dom';
 
 import {notifyServer} from '../services/uploadFile.js'
 import Loading from '../components/Loading';
 import ShowError from '../components/ShowError';
-
-// 여기 새로고침하면 서버로 계속 데이턱 ㅏ전송되는 오류는?
+import Declare from '../components/Declare';
 export default function ResultPage() {
 
     const parseSessionItem = (key) => {
@@ -33,6 +33,10 @@ export default function ResultPage() {
     const [summaryItems, setSummaryItems] = useState([]);
     const [unfairItems, setUnfairItems] = useState([]);
     const [errorMessage, setErrorMessage] = useState([]);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModal, setIsModal] = useState(false);
+
 
     const categoryNameMap = {
         processingPurpose: "개인정보 처리 목적",
@@ -159,7 +163,12 @@ export default function ResultPage() {
                     <div className="bg-yellow-02 rounded-2xl md:p-6 space-y-6">
                         {/* 독소조항 탐지 출력 */}
                         <div>
-                            <h3 className="text-lg md:text-xl font-semibold mb-2 text-left">불공정 조항 탐지 결과</h3>
+                            <h3 className="text-lg md:text-xl font-semibold mb-2 text-left ">불공정 조항 탐지 결과
+                                <span className = 'bg-yellow-02 mx-2 cursor-pointer'
+                                    onClick = {() => {if(!isModal) setIsModalOpen(true)}}>
+                                    <img src={DeclareIcon} alt="신고하기" className="w-[31px] h-[31px] inline-block align-middle" />
+                                </span>
+                            </h3>
                             <div className="bg-white rounded-2xl p-4">
                                 {unfairItems.length > 0 ? (
                                     unfairItems.map((item, idx) => (
@@ -191,6 +200,11 @@ export default function ResultPage() {
                     </div>
                 </div>
             ))}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <Declare onClose={() => setIsModalOpen(false)} />
+                </div>
+            )}
         </div>
     );
 }
