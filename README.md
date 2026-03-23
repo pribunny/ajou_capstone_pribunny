@@ -18,6 +18,10 @@ PriBuddy는 다음과 같은 문제를 해결하기 위해 기획되었습니다
 
 이를 해결하기 위해 PriBuddy는 개인정보 문서를 **쉽게 요약**하고, **위험하거나 불공정할 수 있는 조항을 탐지**하는 기능을 제공합니다.
 
+## 데모 영상
+
+[![PriBuddy Demo](https://img.youtube.com/vi/qwRPUcoX4Vc/hqdefault.jpg)](https://youtu.be/qwRPUcoX4Vc)
+
 ---
 
 ## 주요 기능
