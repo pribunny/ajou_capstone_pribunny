@@ -79,6 +79,7 @@ web_modules/
 .env.production.local
 .env.local
 .env.dev
+.env.prod
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -136,3 +137,8 @@ dist
 certs/
 /front/package-lock.json
 /capstone.iml
+
+__pycache__/
+
+*.traineddata
+/DB_setting/

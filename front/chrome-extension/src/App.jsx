@@ -4,6 +4,12 @@ import './App.css'
 import ResultPage from './pages/ResultPage'
 import Popup from './pages/Popup'
 import SettingPage from './pages/SettingPage'
+import ResultUnfairDetail from './pages/ResultUnfairDetail';
+import ErrorPage from './pages/ErrorPage';
+import SettingAddPhrase from './pages/SettingAddPhrase';   
+import SettingAddPrivacy from './pages/SettingAddPrivacy';
+import ResultSummaryDetail from './pages/ResultSummaryDetail'; // 경로에 따라 조정 필요
+import DeclarePage from './pages/DeclarePage';
 
 function App() {
   return (
@@ -12,10 +18,16 @@ function App() {
           <Route path="/" element={<Popup />} />
           <Route path="/start" element={<ResultPage />} />
           <Route path="/setting" element={<SettingPage />} />
+          <Route path="/setting/settingaddphrase" element={<SettingAddPhrase />} /> 수정
+          <Route path="/setting/settingaddprivacy" element={<SettingAddPrivacy />} /> 수정
+          <Route path="/start/resultdetail" element={<ResultUnfairDetail />} />
+          <Route path="/start/resultsummarydetail" element={<ResultSummaryDetail />} />
+          <Route path="/error" element={<ErrorPage />} />
+          <Route path="/declare" element={<DeclarePage />} />
+
       </Routes>
 
   );
 }
 
 export default App
-
